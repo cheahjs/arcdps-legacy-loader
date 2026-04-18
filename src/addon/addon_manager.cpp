@@ -10,8 +10,6 @@
 
 namespace fs = std::filesystem;
 
-extern HMODULE g_self_module;
-
 namespace {
     std::vector<LegacyAddon> g_addons;
 
@@ -51,8 +49,7 @@ void LoadAll(void* legacy_imguictx) {
 }
 
 void UnloadAll() {
-    for (auto& a : g_addons) a.Unload();
-    g_addons.clear();
+    g_addons.clear();  /* ~LegacyAddon runs mod_release + FreeLibrary */
 }
 
 void DispatchImgui(uint32_t flag) {

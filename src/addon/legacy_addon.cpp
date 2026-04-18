@@ -1,6 +1,30 @@
 #include "legacy_addon.h"
 #include "proxy/arcdps_proxy.h"
 
+#include <utility>
+
+LegacyAddon::LegacyAddon(LegacyAddon&& o) noexcept
+    : m_module(o.m_module), m_exports(o.m_exports), m_release(o.m_release),
+      m_path(std::move(o.m_path)) {
+    o.m_module  = nullptr;
+    o.m_exports = nullptr;
+    o.m_release = nullptr;
+}
+
+LegacyAddon& LegacyAddon::operator=(LegacyAddon&& o) noexcept {
+    if (this != &o) {
+        Unload();
+        m_module   = o.m_module;
+        m_exports  = o.m_exports;
+        m_release  = o.m_release;
+        m_path     = std::move(o.m_path);
+        o.m_module  = nullptr;
+        o.m_exports = nullptr;
+        o.m_release = nullptr;
+    }
+    return *this;
+}
+
 bool LegacyAddon::Load(const std::wstring& path, void* legacy_imguictx) {
     m_path   = path;
     m_module = LoadLibraryW(path.c_str());

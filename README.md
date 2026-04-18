@@ -31,7 +31,7 @@ them.
 
 Settings are written to `<gw2-root>/addons/arcdps/legacy/loader.ini` and
 ImGui window state to `imgui.ini` next to it. Failure diagnostics go to
-`<gw2-root>/arcdps_legacy_loader.log` and arcdps's log window.
+`<gw2-root>/addons/arcdps/arcdps_legacy_loader.log` and arcdps's log window.
 
 ## Building
 
@@ -61,6 +61,9 @@ Output: `build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll`.
 
 - The reported `imguivers` is hard-coded to `19270` in `src/exports.cpp`.
   Bump it if arcdps moves to a newer ImGui.
+- `arcdps_exports::sig` is hard-coded (`0x7A11EDAD`). arcdps de-duplicates
+  addons by this value, so another addon picking the same constant would
+  collide. If you fork the loader, pick your own.
 - `options_windows(name)` overrides against arcdps's built-in window list
   are not wired up - the loader does not know arcdps's window registry.
   Legacy addons' own checkboxes drawn from `options_windows(nullptr)` work

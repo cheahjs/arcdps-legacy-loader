@@ -17,9 +17,10 @@ namespace ImguiLegacy {
     void  NewFrame();
     void  EndFrameAndRender();
 
-    /* WndProc handler for the 1.80 backend. Returns nonzero if the message
-     * was consumed (legacy addons can still inspect it via wnd_filter). */
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+    /* Feeds the 1.80 backend's IO state from a WndProc message. Does not
+     * consume the message — AddonManager decides whether to forward it to
+     * legacy addons / the game based on io.WantCaptureMouse etc. */
+    void WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
     void* Context();  /* ImGuiContext* — for handing to legacy addons */
 }

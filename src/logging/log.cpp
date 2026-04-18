@@ -4,9 +4,8 @@
 #include <windows.h>
 #include <cstdarg>
 #include <cstdio>
-#include <cstring>
-
-extern HMODULE g_self_module;
+#include <filesystem>
+#include <string>
 
 namespace {
     using e3_fn_t = uintptr_t(*)(char*);
@@ -20,17 +19,23 @@ namespace {
         g_resolved = true;
     }
 
-    /* Always-on file log next to the loader dll, so we get diagnostics even
-     * when e3 can't be resolved. */
+    /* Rooted on the game exe so the log lives at a predictable location
+     * (<gw2-root>/addons/arcdps/) regardless of where the loader dll sits. */
+    const std::string& LogPath() {
+        static std::string path = [] {
+            wchar_t buf[MAX_PATH];
+            DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+            namespace fs = std::filesystem;
+            fs::path dir = (n > 0 && n < MAX_PATH) ? fs::path(buf).parent_path() : fs::path();
+            return (dir / "addons" / "arcdps" / "arcdps_legacy_loader.log").string();
+        }();
+        return path;
+    }
+
+    /* Always-on file log next to arcdps.dll, so we get diagnostics even when
+     * e3 can't be resolved. */
     void WriteFile(const char* msg) {
-        static char path[MAX_PATH] = {0};
-        if (!path[0]) {
-            GetModuleFileNameA(g_self_module, path, sizeof(path));
-            char* slash = strrchr(path, '\\');
-            if (slash) { strcpy(slash + 1, "arcdps_legacy_loader.log"); }
-            else { strcpy(path, "arcdps_legacy_loader.log"); }
-        }
-        FILE* f = fopen(path, "a");
+        FILE* f = fopen(LogPath().c_str(), "a");
         if (!f) return;
         SYSTEMTIME st; GetLocalTime(&st);
         fprintf(f, "%04d-%02d-%02d %02d:%02d:%02d.%03d %s\n",

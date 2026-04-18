@@ -86,8 +86,12 @@ void Draw() {
     ImGui::End();
 }
 
-bool HandleKey(HWND, UINT msg, WPARAM wp, LPARAM) {
+bool HandleKey(HWND, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg != WM_KEYDOWN && msg != WM_SYSKEYDOWN) return false;
+    /* lparam bit 30 is the previous key state — set means the key was already
+     * down, i.e. this is an auto-repeat. Skip so holding the hotkey doesn't
+     * toggle every frame. */
+    if (lp & (1 << 30)) return false;
 
     /* Rebind capture: first non-modifier keydown becomes the new toggle. */
     if (g_awaiting_rebind) {

@@ -7,6 +7,14 @@
 /* One legacy arcdps addon dll loaded by the loader. */
 class LegacyAddon {
 public:
+    LegacyAddon() = default;
+    ~LegacyAddon() { Unload(); }
+
+    LegacyAddon(const LegacyAddon&)            = delete;
+    LegacyAddon& operator=(const LegacyAddon&) = delete;
+    LegacyAddon(LegacyAddon&& o) noexcept;
+    LegacyAddon& operator=(LegacyAddon&& o) noexcept;
+
     bool Load(const std::wstring& path, void* legacy_imguictx);
     void Unload();
 

@@ -1,4 +1,5 @@
 #include "config.h"
+#include "logging/log.h"
 
 #include <cstdio>
 #include <cstring>
@@ -37,7 +38,10 @@ void Save() {
     std::error_code ec;
     fs::create_directories(path.parent_path(), ec);
     FILE* f = _wfopen(path.wstring().c_str(), L"w");
-    if (!f) return;
+    if (!f) {
+        Log::Msg("Config: save failed: %s", path.string().c_str());
+        return;
+    }
     fprintf(f, "toggle_vk=%d\n",    g_toggle.vk);
     fprintf(f, "toggle_shift=%d\n", g_toggle.shift ? 1 : 0);
     fprintf(f, "toggle_ctrl=%d\n",  g_toggle.ctrl  ? 1 : 0);

@@ -8,12 +8,10 @@
 #include <d3d11.h>
 #include <dxgi.h>
 #include <wrl/client.h>
-#include <cstdio>
-#include <cstring>
+#include <filesystem>
+#include <string>
 
 using Microsoft::WRL::ComPtr;
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
 namespace {
     ImGuiContext*         g_ctx        = nullptr;
@@ -24,7 +22,7 @@ namespace {
     bool                  g_backend_up = false;
     /* Backing storage for ImGuiIO::IniFilename — imgui just stores the
      * pointer, so this must outlive the context. */
-    char g_ini_path[MAX_PATH] = {0};
+    std::string g_ini_path;
 }
 
 namespace ImguiLegacy {
@@ -52,12 +50,12 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     ImGui::SetCurrentContext(g_ctx);
 
     /* Persist window positions/sizes next to the loader config. */
-    char exe[MAX_PATH];
-    GetModuleFileNameA(nullptr, exe, sizeof(exe));
-    if (char* slash = strrchr(exe, '\\')) *slash = 0;
-    snprintf(g_ini_path, sizeof(g_ini_path),
-             "%s\\addons\\arcdps\\legacy\\imgui.ini", exe);
-    ImGui::GetIO().IniFilename = g_ini_path;
+    wchar_t exe[MAX_PATH];
+    DWORD exe_n = GetModuleFileNameW(nullptr, exe, MAX_PATH);
+    namespace fs = std::filesystem;
+    fs::path exe_dir = (exe_n > 0 && exe_n < MAX_PATH) ? fs::path(exe).parent_path() : fs::path();
+    g_ini_path = (exe_dir / "addons" / "arcdps" / "legacy" / "imgui.ini").string();
+    ImGui::GetIO().IniFilename = g_ini_path.c_str();
 
     if (!ImGui_ImplWin32_Init(g_hwnd) ||
         !ImGui_ImplDX11_Init(g_device.Get(), g_immediate.Get())) {
@@ -136,8 +134,8 @@ void EndFrameAndRender() {
  * events, which clobbers the game's own capture (GW2's right-click-to-
  * rotate-camera relies on persistent Win32 capture to keep tracking mouse
  * movement once the cursor leaves the window). */
-LRESULT WndProc(HWND, UINT msg, WPARAM wp, LPARAM lp) {
-    if (!g_ctx) return 0;
+void WndProc(HWND, UINT msg, WPARAM wp, LPARAM lp) {
+    if (!g_ctx) return;
     ImGui::SetCurrentContext(g_ctx);
     auto& io = ImGui::GetIO();
 
@@ -168,7 +166,6 @@ LRESULT WndProc(HWND, UINT msg, WPARAM wp, LPARAM lp) {
     default: break;
     }
     (void)lp;
-    return 0;
 }
 
 void* Context() { return g_ctx; }

@@ -6,7 +6,7 @@
  * the legacy-addon directory. */
 namespace Config {
     struct Hotkey {
-        int  vk    = 'L';    /* VK_* or character code */
+        int  vk    = 'L';    /* Win32 VK_* code; ASCII letter/digit VKs coincide with their char */
         bool shift = true;
         bool ctrl  = false;
         bool alt   = true;
