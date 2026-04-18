@@ -1,0 +1,28 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+    "configurePresets": [
+        {
+            "name": "msvc-x64",
+            "displayName": "MSVC x64 (native Windows)",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/msvc-x64",
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+        },
+        {
+            "name": "mingw-x64",
+            "displayName": "mingw-w64 x64 (cross-compile)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/mingw-x64",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/mingw-w64-x86_64.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        }
+    ],
+    "buildPresets": [
+        { "name": "msvc-x64",  "configurePreset": "msvc-x64",  "configuration": "RelWithDebInfo" },
+        { "name": "mingw-x64", "configurePreset": "mingw-x64" }
+    ]
+}

@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  msvc:
+    name: MSVC x64 (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset msvc-x64
+
+      - name: Build
+        run: cmake --build --preset msvc-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arcdps_legacy_loader-msvc-x64
+          path: build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll
+          if-no-files-found: error
+
+  mingw:
+    name: mingw-w64 x64 (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-mingw-w64-x86-64 ninja-build
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+      - name: Configure
+        run: cmake --preset mingw-x64
+
+      - name: Build
+        run: cmake --build --preset mingw-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arcdps_legacy_loader-mingw-x64
+          path: build/mingw-x64/arcdps_legacy_loader.dll
+          if-no-files-found: error
