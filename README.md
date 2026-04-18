@@ -1,104 +1,71 @@
 # arcdps-legacy-loader
 
-An arcdps extension that loads legacy arcdps addons against an older ImGui
-context after arcdps itself updates to ImGui 1.92.7+.
+An arcdps extension that keeps old ImGui 1.80 arcdps addons working after
+arcdps updates to ImGui 1.92.7+.
 
-## Why
+## What it does
 
-arcdps is about to update its ImGui version from 1.80 to 1.92.7+. Legacy
-addons that are still compiled against ImGui 1.80 will fail the
-`IMGUI_VERSION_NUM` check that arcdps performs on load and refuse to
-initialise, bricking any addon whose author has not shipped a rebuild.
+arcdps rejects addons whose reported `IMGUI_VERSION_NUM` does not match its
+own. When arcdps updates to 1.92.7, every addon still compiled against 1.80
+stops loading until its author ships a rebuild.
 
-This loader registers itself as a modern arcdps extension (reporting the
-new ImGui version number) and maintains its own ImGui 1.80 context. Legacy
-addons are loaded in-process, handed the 1.80 context, and driven via the
-same arcdps callback shape (`imgui`, `combat`, `combat_local`, `wnd_filter`,
-`wnd_nofilter`). arcdps's own HMODULE is forwarded so addons can resolve
-`e0`..`e10` exports directly against arcdps - those signatures are ImGui-
-independent, so no shimming is required.
+This loader registers as a 1.92.7 arcdps extension and maintains its own
+private ImGui 1.80 context. Legacy addons are loaded against the 1.80
+context and driven via the same arcdps callback shape (`imgui`, `combat`,
+`combat_local`, `wnd_filter`, `wnd_nofilter`). arcdps's own HMODULE is
+forwarded so addons' `GetProcAddress("e3")` etc. resolve directly - those
+exports are ImGui-independent, so no shimming is needed.
 
-## How it works
-
-- Loader is an arcdps extension built against ImGui 1.80 (statically linked).
-  Reports `imguivers = 19270` so arcdps 1.92.7 accepts it.
-- On `mod_init` the loader creates a private ImGui 1.80 `ImGuiContext` plus
-  a DX11 backend bound to the game's swapchain.
-- Legacy addons are scanned from `<game>/addons/arcdps/legacy/` and loaded
-  with the 1.80 context and arcdps's real HMODULE.
-- `imgui` callbacks are fanned out between an explicit `NewFrame` and
-  `Render`; the backbuffer RTV is bound manually each frame since arcdps
-  does not bind one before invoking our callback.
-- Input routing uses a hand-rolled WndProc shim that sets `io.MouseDown` /
-  `io.MousePos` / `io.KeysDown` directly. It deliberately does **not** call
-  `SetCapture` / `ReleaseCapture` so the game's own Win32 mouse capture
-  (used for right-click-to-rotate-camera) is not clobbered.
-- A mock settings window is provided in the 1.80 context since arcdps's own
-  options UI runs against the 1.92.7 context and cannot invoke legacy
-  `options_tab` / `options_windows` callbacks. Toggle it with a
-  configurable hotkey (default `Shift+Alt+L`).
-- Settings persist to `<game>/addons/arcdps/legacy/loader.ini`. ImGui window
-  positions persist to `<game>/addons/arcdps/legacy/imgui.ini`.
+A small options window (`Shift+Alt+L` by default) exposes each legacy
+addon's `options_tab` and `options_windows(nullptr)` callbacks, since
+arcdps's own options UI runs against the 1.92.7 context and cannot invoke
+them.
 
 ## Installation
 
 1. Drop `arcdps_legacy_loader.dll` into `<gw2-root>/addons/arcdps/`.
-2. Create `<gw2-root>/addons/arcdps/legacy/` and put the legacy ImGui 1.80
-   addon DLLs in it.
-3. Launch the game. The loader appears in arcdps's extension list; legacy
-   addons are loaded behind it.
+2. Put your legacy ImGui 1.80 addon DLLs into
+   `<gw2-root>/addons/arcdps/legacy/`.
+3. Launch. The loader appears in arcdps's extension list and loads the
+   legacy addons behind it.
 
-Failure diagnostics are written to `<gw2-root>/arcdps_legacy_loader.log`
-and forwarded to arcdps's log window via `e3`.
+Settings are written to `<gw2-root>/addons/arcdps/legacy/loader.ini` and
+ImGui window state to `imgui.ini` next to it. Failure diagnostics go to
+`<gw2-root>/arcdps_legacy_loader.log` and arcdps's log window.
 
 ## Building
 
 ### Cross-compile from macOS / Linux
 
-Requires `mingw-w64` (`brew install mingw-w64`) and CMake 3.20+.
+Requires `mingw-w64` (`brew install mingw-w64` / `apt install g++-mingw-w64`)
+and CMake 3.21+.
 
 ```
-./scripts/build-and-deploy.sh
+cmake --preset mingw-x64
+cmake --build --preset mingw-x64
 ```
 
-The script configures with `cmake/toolchain-mingw.cmake`, builds a
-self-contained DLL (static libgcc / libstdc++), and deploys it into the
-CrossOver bottle path hardcoded at the top of the script. Edit the path to
-match your install.
+Output: `build/mingw-x64/arcdps_legacy_loader.dll` (self-contained,
+static-linked mingw runtime).
 
 ### Native Windows (MSVC)
 
 ```
-cmake -S . -B build
-cmake --build build --config Release
+cmake --preset msvc-x64
+cmake --build --preset msvc-x64
 ```
 
-Output: `build/Release/arcdps_legacy_loader.dll`.
-
-## Layout
-
-```
-src/
-  exports.cpp              arcdps extension entry + exports table
-  dllmain.cpp              module handle capture
-  proxy/arcdps_proxy.*     stashes the handoff from arcdps mod_init
-  imgui_legacy/context.*   owns the 1.80 ImGuiContext + dx11/win32 backend
-  addon/legacy_addon.*     one loaded legacy addon dll
-  addon/addon_manager.*    scan/load and fan-out of arcdps callbacks
-  ui/settings_window.*     mock options window rendered in the 1.80 context
-  config/config.*          loader.ini parse/write
-  logging/log.*            e3 + file log
-```
+Output: `build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll`.
 
 ## Known limitations
 
-- The loader statically links ImGui 1.80 only. If arcdps's reported ImGui
-  version changes again, bump `IMGUI_VERSION_NUM_1_92_7` in
-  `src/exports.cpp`.
+- The reported `imguivers` is hard-coded to `19270` in `src/exports.cpp`.
+  Bump it if arcdps moves to a newer ImGui.
 - `options_windows(name)` overrides against arcdps's built-in window list
-  are not wired up - the loader does not know arcdps's internal window
-  registry. Legacy addons' own checkboxes drawn from
-  `options_windows(nullptr)` work inside the mock settings window.
-- Under Wine / CrossOver, `ImGui_ImplWin32_NewFrame` will not update
-  `io.MousePos` because its foreground-window check fails; the loader
-  patches around this by re-reading `GetCursorPos` after `NewFrame`.
+  are not wired up - the loader does not know arcdps's window registry.
+  Legacy addons' own checkboxes drawn from `options_windows(nullptr)` work
+  inside the options window.
+- Input routing uses a hand-rolled WndProc shim instead of ImGui's upstream
+  `ImGui_ImplWin32_WndProcHandler` so that `SetCapture` /`ReleaseCapture`
+  inside ImGui do not clobber the game's own Win32 mouse capture (GW2's
+  right-click-to-rotate-camera relies on it).
