@@ -63,6 +63,11 @@ namespace {
     }
 
     void mod_release() {
+        /* Persist ini + sever cross-module pointers (settings handlers, hooks)
+         * BEFORE FreeLibrary'ing legacy addons. If we unloaded first,
+         * ImGui::Shutdown's save path would call WriteAllFn on a handler the
+         * addon registered and crash in its now-unmapped code page. */
+        ImguiLegacy::SaveAndDetachFromAddons();
         AddonManager::UnloadAll();
         ImguiLegacy::Shutdown();
     }

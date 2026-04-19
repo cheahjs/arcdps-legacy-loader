@@ -10,6 +10,14 @@ namespace ImguiLegacy {
      * id3dptr is IDXGISwapChain* when d3dversion==11. Returns the
      * ImGuiContext* (opaque to callers — pass through to legacy mod_init). */
     void* Init(void* id3dptr, uint32_t d3dversion);
+
+    /* Persist window positions and sever any cross-module pointers from the
+     * context into legacy addon DLLs (SettingsHandlers' WriteAllFn, Hooks'
+     * Callback). MUST be called before addons are FreeLibrary'd — otherwise
+     * ImGui::Shutdown's ini save / shutdown hooks will dereference unmapped
+     * code pages and crash. Safe to call before Shutdown; Shutdown is a
+     * no-op on these tables after this runs. */
+    void  SaveAndDetachFromAddons();
     void  Shutdown();
 
     /* Pump NewFrame for the 1.80 context; call before dispatching imgui_cbs.

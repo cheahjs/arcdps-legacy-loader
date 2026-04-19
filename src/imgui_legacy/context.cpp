@@ -113,7 +113,35 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     return g_ctx;
 }
 
+void SaveAndDetachFromAddons() {
+    if (!g_ctx) return;
+    ImGui::SetCurrentContext(g_ctx);
+    auto& g = *g_ctx;
+
+    /* Legacy addons like Boon Table call ImGui::AddSettingsHandler on our
+     * shared context — their WriteAllFn points into the addon's code. Save
+     * the ini now, while those pointers are still valid, then null the
+     * path so ImGui::Shutdown's internal save becomes a no-op. */
+    if (g.SettingsLoaded && g.IO.IniFilename)
+        ImGui::SaveIniSettingsToDisk(g.IO.IniFilename);
+    g.IO.IniFilename = nullptr;
+
+    /* Drop the default Window/Table handlers too — we've already saved, and
+     * anything an addon pushed afterwards sits at a higher index we'd have
+     * to scan for. Wholesale clear is simpler and equally correct. */
+    g.SettingsHandlers.clear();
+
+    /* ContextHooks live in the same category: addon-registered callbacks
+     * would fire during CallContextHooks(Shutdown) on now-unmapped code. */
+    g.Hooks.clear();
+}
+
 void Shutdown() {
+    /* SaveAndDetachFromAddons should already have run from mod_release, but
+     * guard here too so direct callers of Shutdown (e.g. the Init failure
+     * path) don't leave dangling pointers behind. */
+    SaveAndDetachFromAddons();
+
     if (g_backend_up) {
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
