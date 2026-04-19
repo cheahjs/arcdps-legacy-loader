@@ -53,6 +53,19 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     g_hwnd = desc.OutputWindow;
 
     IMGUI_CHECKVERSION();
+    /* Route all 1.80 allocations through arcdps's allocator so every legacy
+     * addon — which calls ImGui::SetAllocatorFunctions(mallocfn, freefn) in
+     * its own statically-linked ImGui — shares a single heap with us. Without
+     * this, a buffer our ImGui allocated (loader CRT heap) and the addon's
+     * ImGui later reallocates via arcdps's freefn crashes in ntdll heap
+     * validation. Must happen before CreateContext so the context itself
+     * and its internal buffers (e.g. SettingsIniData) use this allocator. */
+    const auto& hh = ArcdpsProxy::Get();
+    if (hh.mallocfn && hh.freefn) {
+        ImGui::SetAllocatorFunctions(
+            reinterpret_cast<void*(*)(size_t, void*)>(hh.mallocfn),
+            reinterpret_cast<void(*)(void*, void*)>(hh.freefn));
+    }
     g_ctx = ImGui::CreateContext();
     ImGui::SetCurrentContext(g_ctx);
 
