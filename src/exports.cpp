@@ -55,7 +55,7 @@ namespace {
 
         void* legacy_ctx = ImguiLegacy::Init(h.id3dptr, h.d3dversion);
         if (!legacy_ctx) return &g_exports;
-        AddonManager::LoadAll(legacy_ctx);
+        AddonManager::LoadAllAsync(legacy_ctx);
         return &g_exports;
     }
 
