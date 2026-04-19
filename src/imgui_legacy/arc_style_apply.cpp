@@ -67,10 +67,26 @@ void ApplyArcStyle(const ArcStyleSnapshot& s, ImGuiStyle& d) {
     MaybeAssign(d.CurveTessellationTol,       s.CurveTessellationTol);
     MaybeAssign(d.CircleSegmentMaxError,      s.CircleTessellationMaxError);
 
+    /* 1.92 renamed several colors that still exist in 1.80 under the
+     * old names. Without this map, e.g. arcdps's TabSelected never
+     * lands on 1.80's TabActive, so tabs stay bluish even though every
+     * other color matches. Applied before the direct name lookup. */
+    static const std::unordered_map<std::string, const char*> kRenames = {
+        { "TabSelected",       "TabActive" },
+        { "TabDimmed",         "TabUnfocused" },
+        { "TabDimmedSelected", "TabUnfocusedActive" },
+        { "NavCursor",         "NavHighlight" },
+    };
+
     const auto& table = LegacyColorTable();
     for (int i = 0; i < s.color_count; ++i) {
-        auto it = table.find(s.colors[i].name);
-        if (it == table.end()) continue;  /* name renamed or added in 1.92 */
+        const char* name = s.colors[i].name;
+        auto it = table.find(name);
+        if (it == table.end()) {
+            auto r = kRenames.find(name);
+            if (r != kRenames.end()) it = table.find(r->second);
+        }
+        if (it == table.end()) continue;  /* genuinely new in 1.92 — drop */
         d.Colors[it->second] = ImVec4(
             s.colors[i].rgba[0], s.colors[i].rgba[1],
             s.colors[i].rgba[2], s.colors[i].rgba[3]);

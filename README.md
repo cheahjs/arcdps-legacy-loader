@@ -23,7 +23,10 @@ them.
 
 ## Installation
 
-1. Drop `arcdps_legacy_loader.dll` into `<gw2-root>/addons/arcdps/`.
+1. Drop `arcdps_legacy_loader.dll` into `<gw2-root>/` next to
+   `d3d11.dll` / `arcdps.dll`. arcdps scans the game directory for
+   extension DLLs — `addons/arcdps/` is a config/data directory, not an
+   install target.
 2. Put your legacy ImGui 1.80 addon DLLs into
    `<gw2-root>/addons/arcdps/legacy/`.
 3. Launch. The loader appears in arcdps's extension list and loads the

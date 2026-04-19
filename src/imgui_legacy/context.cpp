@@ -29,6 +29,7 @@ namespace {
     /* Backing storage for ImGuiIO::IniFilename — imgui just stores the
      * pointer, so this must outlive the context. */
     std::string g_ini_path;
+    bool        g_style_captured = false;  /* first successful RefreshStyle */
 }
 
 namespace ImguiLegacy {
@@ -63,9 +64,11 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     g_ini_path = (exe_dir / "addons" / "arcdps" / "legacy" / "imgui.ini").string();
     ImGui::GetIO().IniFilename = g_ini_path.c_str();
 
-    /* Port arcdps's styling onto our 1.80 context so legacy addons blend
-     * in. Failures (ABI mismatch) are logged and we fall back to stock. */
-    RefreshStyle(Config::StyleFollowsArcdps());
+    /* Style defaults to 1.80 dark. The actual arcdps style port is
+     * deferred to the first NewFrame — at Init time arcdps has often not
+     * populated its own ImGuiStyle yet, and reading it would give us an
+     * all-zero palette that renders everything transparent. */
+    ImGui::StyleColorsDark();
 
     if (!ImGui_ImplWin32_Init(g_hwnd) ||
         !ImGui_ImplDX11_Init(g_device.Get(), g_immediate.Get())) {
@@ -110,6 +113,30 @@ void NewFrame() {
         ImGui::GetIO().MousePos = ImVec2((float)pt.x, (float)pt.y);
 
     ImGui::NewFrame();
+
+    /* Deferred style capture (see Init for why). Retries each frame while
+     * arcdps's ImGuiStyle still reads as un-initialised, then stops. If
+     * we still haven't succeeded after a short window we give up and log
+     * diagnostics once — re-trying forever spams the log and pegs cost
+     * when arcdps's imconfig doesn't match our assumed layout. */
+    static int  s_style_attempts = 0;
+    static bool s_style_gave_up  = false;
+    constexpr int kMaxAttempts = 240;  /* ~4s at 60 Hz */
+    if (!g_style_captured && !s_style_gave_up && Config::StyleFollowsArcdps()) {
+        if (RefreshStyle(true)) {
+            g_style_captured = true;
+            const char* layout = ArcStyleReader_LayoutDiagnostic();
+            Log::Msg("ImguiLegacy: applied arcdps style on frame %d — %s",
+                     s_style_attempts, layout[0] ? layout : "layout ok");
+        } else if (++s_style_attempts >= kMaxAttempts) {
+            s_style_gave_up = true;
+            const char* why = ArcStyleReader_LastFailure();
+            const char* layout = ArcStyleReader_LayoutDiagnostic();
+            Log::Msg("ImguiLegacy: giving up on arcdps style — %s; layout: %s",
+                     why[0] ? why : "no diagnostic",
+                     layout[0] ? layout : "not detected");
+        }
+    }
 
     /* Mirror arcdps's live window list as invisible shadow windows so
      * addons that anchor their UI against arcdps windows (resolved via
@@ -197,15 +224,20 @@ bool RefreshStyle(bool follow) {
     /* Reset to 1.80 defaults first so turning the toggle off actually
      * reverts any colors we previously painted over. */
     ImGui::StyleColorsDark();
-    if (!follow) return false;
+    if (!follow) {
+        g_style_captured = false;  /* re-arm first-frame capture on toggle-on */
+        return false;
+    }
 
     ArcStyleSnapshot snap;
     ArcStyleSnapshot_Init(&snap);
     if (!ArcStyleReader_Capture(ArcdpsProxy::Get().arc_imguictx, &snap)) {
-        Log::Msg("ImguiLegacy: arcdps style capture skipped (ABI mismatch)");
+        /* Silent — the caller (first-frame retry loop) decides when to
+         * emit a single diagnostic so we don't flood arcdps's log. */
         return false;
     }
     ApplyArcStyle(snap, ImGui::GetStyle());
+    g_style_captured = true;
     return true;
 }
 

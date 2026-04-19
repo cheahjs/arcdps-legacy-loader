@@ -83,6 +83,19 @@ void ArcStyleSnapshot_Init(ArcStyleSnapshot* s);
  * left at the Init'd sentinel state and the caller should skip styling. */
 int ArcStyleReader_Capture(void* arc_imgui_ctx, ArcStyleSnapshot* out);
 
+/* Returns a pointer to a static diagnostic string describing the first
+ * failed sanity check since process start (or empty if none). Useful for
+ * one-shot logging — saves the caller from spamming per-frame failures. */
+const char* ArcStyleReader_LastFailure(void);
+
+/* After a successful Capture, describes where Style was found and the
+ * offset delta between arcdps's layout and ours. Used by the windows
+ * reader to correct its own field offset and by the context init to
+ * surface the result in the log. */
+const char* ArcStyleReader_LayoutDiagnostic(void);
+long long   ArcStyleReader_LayoutDelta(void);  /* 0 when layouts agree */
+int         ArcStyleReader_LayoutKnown(void);
+
 #ifdef __cplusplus
 }
 #endif

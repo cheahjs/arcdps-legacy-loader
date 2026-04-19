@@ -20,14 +20,18 @@ namespace {
     }
 
     /* Rooted on the game exe so the log lives at a predictable location
-     * (<gw2-root>/addons/arcdps/) regardless of where the loader dll sits. */
-    const std::string& LogPath() {
-        static std::string path = [] {
+     * (<gw2-root>/addons/arcdps/) regardless of where the loader dll sits.
+     * Kept as a wide string so _wfopen sees the real Windows path under
+     * Wine — narrow fopen + fs::path::string() was silently failing when
+     * the path contained an ANSI-unfriendly component, leaving us with
+     * no local log even though e3 forwarding still worked. */
+    const std::wstring& LogPath() {
+        static std::wstring path = [] {
             wchar_t buf[MAX_PATH];
             DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
             namespace fs = std::filesystem;
             fs::path dir = (n > 0 && n < MAX_PATH) ? fs::path(buf).parent_path() : fs::path();
-            return (dir / "addons" / "arcdps" / "arcdps_legacy_loader.log").string();
+            return (dir / L"addons" / L"arcdps" / L"arcdps_legacy_loader.log").wstring();
         }();
         return path;
     }
@@ -35,7 +39,7 @@ namespace {
     /* Always-on file log next to arcdps.dll, so we get diagnostics even when
      * e3 can't be resolved. */
     void WriteFile(const char* msg) {
-        FILE* f = fopen(LogPath().c_str(), "a");
+        FILE* f = _wfopen(LogPath().c_str(), L"a");
         if (!f) return;
         SYSTEMTIME st; GetLocalTime(&st);
         fprintf(f, "%04d-%02d-%02d %02d:%02d:%02d.%03d %s\n",

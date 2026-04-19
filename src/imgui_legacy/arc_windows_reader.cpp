@@ -6,11 +6,13 @@
  *
  * Must NOT include the loader's 1.80 "imgui.h". */
 
+#include "arc_style_snapshot.h"
 #include "arc_windows_snapshot.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <cstddef>
 #include <cstring>
 
 namespace {
@@ -22,19 +24,8 @@ namespace {
         dst[n] = '\0';
     }
 
-    /* Same plausibility trick as the style reader — bail if the ctx's
-     * Style field holds clearly-impossible values, which indicates our
-     * assumed layout doesn't match arcdps's build. */
-    bool LooksSane(const ImGuiContext* ctx) {
-        const ImGuiStyle& s = ctx->Style;
-        if (!(s.Alpha >= 0.0f && s.Alpha <= 1.0f)) return false;
-        if (!(s.WindowRounding >= 0.0f && s.WindowRounding <= 64.0f)) return false;
-        if (!(s.FramePadding.x >= 0.0f && s.FramePadding.x <= 256.0f)) return false;
-        /* Windows vector plausibility: Size non-negative, under a huge cap,
-         * Data non-null when non-empty. */
-        if (ctx->Windows.Size < 0 || ctx->Windows.Size > 4096) return false;
-        if (ctx->Windows.Size > 0 && ctx->Windows.Data == nullptr) return false;
-        return true;
+    size_t ExpectedWindowsOffset() {
+        return __builtin_offsetof(ImGuiContext, Windows);
     }
 }
 
@@ -43,18 +34,28 @@ extern "C" int ArcWindowsReader_Capture(void* arc_imgui_ctx, ArcWindowList* out)
     out->count = 0;
     if (!arc_imgui_ctx) return 0;
 
-    const ImGuiContext* ctx = static_cast<const ImGuiContext*>(arc_imgui_ctx);
-    if (!LooksSane(ctx)) return 0;
+    /* Must not read Windows until the style reader has located the real
+     * layout — we use its delta to correct our own offset. If layout is
+     * still unknown, bail silently; the style reader's retry/give-up
+     * loop owns the one-shot diagnostic log. */
+    if (!ArcStyleReader_LayoutKnown()) return 0;
+
+    const unsigned char* base = static_cast<const unsigned char*>(arc_imgui_ctx);
+    const auto delta = static_cast<ptrdiff_t>(ArcStyleReader_LayoutDelta());
+    const auto& windows = *reinterpret_cast<const ImVector<ImGuiWindow*>*>(
+        base + ExpectedWindowsOffset() + delta);
+
+    /* Post-correction plausibility check — a bad Windows vector crashes
+     * as soon as we dereference an element. */
+    if (windows.Size < 0 || windows.Size > 4096) return 0;
+    if (windows.Size > 0 && windows.Data == nullptr) return 0;
 
     int n = 0;
-    for (int i = 0; i < ctx->Windows.Size && n < ARC_MAX_WINDOWS; ++i) {
-        const ImGuiWindow* w = ctx->Windows[i];
+    for (int i = 0; i < windows.Size && n < ARC_MAX_WINDOWS; ++i) {
+        const ImGuiWindow* w = windows[i];
         if (!w || !w->WasActive || w->Hidden) continue;
-        /* Skip child windows — they're composed inside their parent's ID
-         * space and aren't useful anchor targets. */
         if (w->Flags & ImGuiWindowFlags_ChildWindow) continue;
-        /* Skip imgui-internal debug windows. Names starting with "##"
-         * are hidden/internal by convention. */
+        /* Skip imgui-internal debug windows. */
         if (!w->Name || (w->Name[0] == '#' && w->Name[1] == '#')) continue;
 
         CopyName(out->items[n].name, w->Name);
