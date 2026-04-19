@@ -9,6 +9,7 @@ namespace fs = std::filesystem;
 
 namespace {
     Config::Hotkey g_toggle;
+    bool           g_style_follows_arcdps = true;
 
     fs::path ConfigPath() {
         wchar_t buf[MAX_PATH];
@@ -29,6 +30,7 @@ void Load() {
         if (sscanf(line, "toggle_shift=%d", &v) == 1) g_toggle.shift = v != 0;
         if (sscanf(line, "toggle_ctrl=%d", &v)  == 1) g_toggle.ctrl  = v != 0;
         if (sscanf(line, "toggle_alt=%d", &v)   == 1) g_toggle.alt   = v != 0;
+        if (sscanf(line, "style_follows_arcdps=%d", &v) == 1) g_style_follows_arcdps = v != 0;
     }
     fclose(f);
 }
@@ -46,10 +48,12 @@ void Save() {
     fprintf(f, "toggle_shift=%d\n", g_toggle.shift ? 1 : 0);
     fprintf(f, "toggle_ctrl=%d\n",  g_toggle.ctrl  ? 1 : 0);
     fprintf(f, "toggle_alt=%d\n",   g_toggle.alt   ? 1 : 0);
+    fprintf(f, "style_follows_arcdps=%d\n", g_style_follows_arcdps ? 1 : 0);
     fclose(f);
 }
 
-Hotkey& ToggleKey() { return g_toggle; }
+Hotkey& ToggleKey()          { return g_toggle; }
+bool&   StyleFollowsArcdps() { return g_style_follows_arcdps; }
 
 void FormatHotkey(const Hotkey& h, char* buf, size_t len) {
     char key[32];

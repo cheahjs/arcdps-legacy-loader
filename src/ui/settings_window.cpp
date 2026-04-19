@@ -51,6 +51,16 @@ void Draw() {
             dirty |= ImGui::Checkbox("Alt",   &hk.alt);
             if (dirty) Config::Save();
 
+            ImGui::Separator();
+            bool& follow = Config::StyleFollowsArcdps();
+            if (ImGui::Checkbox("Match arcdps style", &follow)) {
+                Config::Save();
+                ImguiLegacy::RefreshStyle(follow);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Re-capture")) ImguiLegacy::RefreshStyle(follow);
+            ImGui::TextDisabled("Copies arcdps's ImGui theme onto the legacy context.");
+
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Windows")) {

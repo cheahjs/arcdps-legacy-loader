@@ -1,6 +1,10 @@
 #include "context.h"
 
+#include "arc_style_snapshot.h"
+#include "arc_style_apply.h"
+#include "config/config.h"
 #include "logging/log.h"
+#include "proxy/arcdps_proxy.h"
 
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
@@ -56,6 +60,10 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     fs::path exe_dir = (exe_n > 0 && exe_n < MAX_PATH) ? fs::path(exe).parent_path() : fs::path();
     g_ini_path = (exe_dir / "addons" / "arcdps" / "legacy" / "imgui.ini").string();
     ImGui::GetIO().IniFilename = g_ini_path.c_str();
+
+    /* Port arcdps's styling onto our 1.80 context so legacy addons blend
+     * in. Failures (ABI mismatch) are logged and we fall back to stock. */
+    RefreshStyle(Config::StyleFollowsArcdps());
 
     if (!ImGui_ImplWin32_Init(g_hwnd) ||
         !ImGui_ImplDX11_Init(g_device.Get(), g_immediate.Get())) {
@@ -169,5 +177,23 @@ void WndProc(HWND, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 void* Context() { return g_ctx; }
+
+bool RefreshStyle(bool follow) {
+    if (!g_ctx) return false;
+    ImGui::SetCurrentContext(g_ctx);
+    /* Reset to 1.80 defaults first so turning the toggle off actually
+     * reverts any colors we previously painted over. */
+    ImGui::StyleColorsDark();
+    if (!follow) return false;
+
+    ArcStyleSnapshot snap;
+    ArcStyleSnapshot_Init(&snap);
+    if (!ArcStyleReader_Capture(ArcdpsProxy::Get().arc_imguictx, &snap)) {
+        Log::Msg("ImguiLegacy: arcdps style capture skipped (ABI mismatch)");
+        return false;
+    }
+    ApplyArcStyle(snap, ImGui::GetStyle());
+    return true;
+}
 
 }

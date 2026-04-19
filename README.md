@@ -33,6 +33,12 @@ Settings are written to `<gw2-root>/addons/arcdps/legacy/loader.ini` and
 ImGui window state to `imgui.ini` next to it. Failure diagnostics go to
 `<gw2-root>/addons/arcdps/arcdps_legacy_loader.log` and arcdps's log window.
 
+By default the loader copies arcdps's live ImGuiStyle onto its private
+1.80 context so legacy addons match arcdps's theme. Set
+`style_follows_arcdps=0` in `loader.ini` to keep the stock 1.80 look —
+useful if a legacy addon ships its own styling that fights the ported
+one, or if the read fails a plausibility check on your arcdps build.
+
 ## Building
 
 ### Cross-compile from macOS / Linux

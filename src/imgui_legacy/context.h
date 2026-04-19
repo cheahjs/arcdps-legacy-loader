@@ -23,4 +23,9 @@ namespace ImguiLegacy {
     void WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
     void* Context();  /* ImGuiContext* — for handing to legacy addons */
+
+    /* Re-read arcdps's ImGuiStyle and apply it to our 1.80 context, or (if
+     * `follow` is false) reset our context to stock 1.80 defaults.
+     * Returns true if an arcdps capture was applied. */
+    bool  RefreshStyle(bool follow);
 }

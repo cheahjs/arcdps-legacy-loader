@@ -17,4 +17,11 @@ namespace Config {
 
     Hotkey& ToggleKey();             /* mutable — edits save on demand */
     void    FormatHotkey(const Hotkey&, char* buf, size_t len);
+
+    /* When true (default), the loader copies arcdps's ImGuiStyle onto the
+     * legacy 1.80 context at init so legacy addons visually match arcdps.
+     * Users can opt out via `style_follows_arcdps=0` in loader.ini — some
+     * legacy addons ship their own styling that would otherwise fight
+     * ours, or the user may prefer the stock 1.80 look. */
+    bool& StyleFollowsArcdps();
 }

@@ -15,6 +15,32 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui_180)
 
+# Vendored ImGui 1.92.7 headers — used only for struct definitions so the
+# reader can cast arcdps's ImGuiContext* and read ->Style directly. We do
+# NOT compile imgui's sources: attempting to link both 1.80 and 1.92
+# implementations into one DLL produces ODR collisions on every global-
+# namespace imgui class method (ImDrawList::AddText, ImFontAtlas::…, etc.)
+# that the ImGui:: namespace rename can't touch. Headers-only sidesteps
+# that entirely at the cost of losing the DebugCheckVersionAndDataLayout
+# safety net — the reader compensates with value sanity checks.
+FetchContent_Declare(
+    imgui_1927
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG        v1.92.7
+)
+FetchContent_MakeAvailable(imgui_1927)
+
+add_library(imgui_1927 OBJECT
+    src/imgui_legacy/arc_style_reader.cpp
+)
+target_include_directories(imgui_1927 PRIVATE
+    ${imgui_1927_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+)
+# Keep the 1.80 backends' IO tweak in sync for struct layout compatibility
+# with arcdps's build (stock imconfig, no gamepad enable).
+target_compile_definitions(imgui_1927 PRIVATE IMGUI_DISABLE_OBSOLETE_FUNCTIONS=0)
+
 add_library(imgui_180 STATIC
     ${imgui_180_SOURCE_DIR}/imgui.cpp
     ${imgui_180_SOURCE_DIR}/imgui_demo.cpp
@@ -37,10 +63,12 @@ add_library(${TARGET_NAME} SHARED
     src/addon/addon_manager.cpp
     src/config/config.cpp
     src/imgui_legacy/context.cpp
+    src/imgui_legacy/arc_style_apply.cpp
     src/proxy/arcdps_proxy.cpp
     src/logging/log.cpp
     src/ui/settings_window.cpp
     def/arcdps_legacy_loader.def
+    $<TARGET_OBJECTS:imgui_1927>
 )
 
 set_target_properties(${TARGET_NAME} PROPERTIES
