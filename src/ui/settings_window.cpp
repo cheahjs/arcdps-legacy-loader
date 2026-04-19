@@ -52,7 +52,7 @@ namespace {
             ImGui::Indent();
             ImGui::TextUnformatted(PathUtf8(a.Path()).c_str());
             if (a.Loaded()) {
-                ImGui::Text("sig: %u  imguivers: %u", a.Sig(), a.ImguiVers());
+                ImGui::Text("sig: 0x%08X  imguivers: %u", a.Sig(), a.ImguiVers());
             }
             ImGui::Unindent();
         }
