@@ -39,7 +39,12 @@ namespace {
     /* Always-on file log next to arcdps.dll, so we get diagnostics even when
      * e3 can't be resolved. */
     void WriteFile(const char* msg) {
-        FILE* f = _wfopen(LogPath().c_str(), L"a");
+        /* Truncate on the first write of each process run so the log reflects
+         * only the current session. */
+        static bool truncated = false;
+        const wchar_t* mode = truncated ? L"a" : L"w";
+        truncated = true;
+        FILE* f = _wfopen(LogPath().c_str(), mode);
         if (!f) return;
         SYSTEMTIME st; GetLocalTime(&st);
         fprintf(f, "%04d-%02d-%02d %02d:%02d:%02d.%03d %s\n",
