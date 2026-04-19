@@ -5,7 +5,9 @@
 
 LegacyAddon::LegacyAddon(LegacyAddon&& o) noexcept
     : m_module(o.m_module), m_exports(o.m_exports), m_release(o.m_release),
-      m_path(std::move(o.m_path)) {
+      m_path(std::move(o.m_path)), m_name(std::move(o.m_name)),
+      m_build(std::move(o.m_build)), m_sig(o.m_sig),
+      m_imguivers(o.m_imguivers), m_status(o.m_status) {
     o.m_module  = nullptr;
     o.m_exports = nullptr;
     o.m_release = nullptr;
@@ -14,10 +16,15 @@ LegacyAddon::LegacyAddon(LegacyAddon&& o) noexcept
 LegacyAddon& LegacyAddon::operator=(LegacyAddon&& o) noexcept {
     if (this != &o) {
         Unload();
-        m_module   = o.m_module;
-        m_exports  = o.m_exports;
-        m_release  = o.m_release;
-        m_path     = std::move(o.m_path);
+        m_module    = o.m_module;
+        m_exports   = o.m_exports;
+        m_release   = o.m_release;
+        m_path      = std::move(o.m_path);
+        m_name      = std::move(o.m_name);
+        m_build     = std::move(o.m_build);
+        m_sig       = o.m_sig;
+        m_imguivers = o.m_imguivers;
+        m_status    = o.m_status;
         o.m_module  = nullptr;
         o.m_exports = nullptr;
         o.m_release = nullptr;
@@ -28,11 +35,11 @@ LegacyAddon& LegacyAddon::operator=(LegacyAddon&& o) noexcept {
 bool LegacyAddon::Load(const std::wstring& path, void* legacy_imguictx) {
     m_path   = path;
     m_module = LoadLibraryW(path.c_str());
-    if (!m_module) return false;
+    if (!m_module) { m_status = Status::LoadLibraryFailed; return false; }
 
     auto get_init    = reinterpret_cast<get_init_addr_fn_t>(GetProcAddress(m_module, "get_init_addr"));
     auto get_release = reinterpret_cast<get_release_addr_fn_t>(GetProcAddress(m_module, "get_release_addr"));
-    if (!get_init) { Unload(); return false; }
+    if (!get_init) { Reject(Status::MissingGetInit); return false; }
 
     const auto& h = ArcdpsProxy::Get();
     /* Pass the legacy addon its 1.80 context while forwarding arcdps's real
@@ -40,13 +47,23 @@ bool LegacyAddon::Load(const std::wstring& path, void* legacy_imguictx) {
     auto mod_init = get_init(
         const_cast<char*>(h.arcversion), legacy_imguictx, h.id3dptr,
         h.arcdll, h.mallocfn, h.freefn, h.d3dversion);
-    if (!mod_init) { Unload(); return false; }
+    if (!mod_init) { Reject(Status::InitFailed); return false; }
 
     m_exports = mod_init();
-    if (!m_exports) { Unload(); return false; }
+    if (!m_exports) { Reject(Status::InitFailed); return false; }
 
-    m_release = get_release ? get_release() : nullptr;
+    m_release   = get_release ? get_release() : nullptr;
+    m_sig       = m_exports->sig;
+    m_imguivers = m_exports->imguivers;
+    if (m_exports->out_name)  m_name  = m_exports->out_name;
+    if (m_exports->out_build) m_build = m_exports->out_build;
+    m_status    = Status::Loaded;
     return true;
+}
+
+void LegacyAddon::Reject(Status reason) {
+    Unload();
+    m_status = reason;
 }
 
 void LegacyAddon::Unload() {

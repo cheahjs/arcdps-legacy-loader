@@ -6,11 +6,17 @@
 
 #include <imgui.h>
 #include <filesystem>
+#include <unordered_map>
 #include <vector>
 
 namespace fs = std::filesystem;
 
 namespace {
+    /* Legacy addons are built against imgui 1.80 and report 18000 in their
+     * exports.imguivers. We allow 0 for addons that don't touch imgui and
+     * therefore don't bother filling the field. */
+    constexpr uint32_t LEGACY_IMGUI_VERSION_NUM = 18000;
+
     std::vector<LegacyAddon> g_addons;
 
     /* <gw2-root>/addons/arcdps/legacy — resolve against the game exe's dir
@@ -35,16 +41,45 @@ void LoadAll(void* legacy_imguictx) {
         return;
     }
 
+    /* Map first-loaded sig -> index into g_addons, so we can label the second
+     * loader as the duplicate (keeping the first to run). */
+    std::unordered_map<uint32_t, size_t> by_sig;
+
     for (const auto& entry : fs::directory_iterator(dir, ec)) {
         if (!entry.is_regular_file()) continue;
         if (entry.path().extension() != L".dll") continue;
 
         LegacyAddon addon;
+        const bool ok = addon.Load(entry.path().wstring(), legacy_imguictx);
         const auto name = entry.path().filename().string();
-        if (addon.Load(entry.path().wstring(), legacy_imguictx))
-            g_addons.push_back(std::move(addon));
-        else
+
+        if (ok) {
+            const uint32_t vers = addon.ImguiVers();
+            if (vers != 0 && vers != LEGACY_IMGUI_VERSION_NUM) {
+                Log::Msg("AddonManager: %s rejected: imguivers %u != %u",
+                         name.c_str(), vers, LEGACY_IMGUI_VERSION_NUM);
+                addon.Reject(LegacyAddon::Status::ImguiVersionMismatch);
+            } else if (auto it = by_sig.find(addon.Sig());
+                       it != by_sig.end() && addon.Sig() != 0) {
+                Log::Msg("AddonManager: %s rejected: duplicate sig %u (also in %s)",
+                         name.c_str(), addon.Sig(), g_addons[it->second].Name());
+                addon.Reject(LegacyAddon::Status::DuplicateSig);
+            } else {
+                by_sig[addon.Sig()] = g_addons.size();
+            }
+        } else {
             Log::Msg("AddonManager: failed to load %s", name.c_str());
+        }
+
+        g_addons.push_back(std::move(addon));
+    }
+
+    /* If any entry isn't in the Loaded state, prompt the user. */
+    for (const auto& a : g_addons) {
+        if (a.State() != LegacyAddon::Status::Loaded) {
+            SettingsWindow::ShowLoadFailurePopup();
+            break;
+        }
     }
 }
 
@@ -54,22 +89,23 @@ void UnloadAll() {
 
 void DispatchImgui(uint32_t flag) {
     ImguiLegacy::NewFrame();
-    for (auto& a : g_addons) a.CallImgui(flag);
+    for (auto& a : g_addons) if (a.Loaded()) a.CallImgui(flag);
     SettingsWindow::Draw();
     ImguiLegacy::EndFrameAndRender();
 }
 
 void DispatchCombat(cbtevent* ev, ag* src, ag* dst, const char* sk, uint64_t id, uint64_t rev) {
-    for (auto& a : g_addons) a.CallCombat(ev, src, dst, sk, id, rev);
+    for (auto& a : g_addons) if (a.Loaded()) a.CallCombat(ev, src, dst, sk, id, rev);
 }
 
 void DispatchCombatLocal(cbtevent* ev, ag* src, ag* dst, const char* sk, uint64_t id, uint64_t rev) {
-    for (auto& a : g_addons) a.CallCombatLocal(ev, src, dst, sk, id, rev);
+    for (auto& a : g_addons) if (a.Loaded()) a.CallCombatLocal(ev, src, dst, sk, id, rev);
 }
 
 uint32_t DispatchWndFilter(HWND h, UINT m, WPARAM w, LPARAM l) {
     uint32_t out = m;
     for (auto& a : g_addons) {
+        if (!a.Loaded()) continue;
         out = a.CallWndFilter(h, out, w, l);
         if (out == 0) return 0;
     }
@@ -107,6 +143,7 @@ uint32_t DispatchWndNoFilter(HWND h, UINT m, WPARAM w, LPARAM l) {
 
     uint32_t out = m;
     for (auto& a : g_addons) {
+        if (!a.Loaded()) continue;
         out = a.CallWndNoFilter(h, out, w, l);
         if (out == 0) return 0;
     }
