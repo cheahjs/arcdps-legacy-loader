@@ -72,9 +72,9 @@ void LegacyAddon::Unload() {
     m_exports = nullptr;
 }
 
-void LegacyAddon::CallImgui(uint32_t flag) {
+void LegacyAddon::CallImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc) {
     if (m_exports && m_exports->imgui)
-        reinterpret_cast<imgui_cb_t>(m_exports->imgui)(flag);
+        reinterpret_cast<imgui_cb_t>(m_exports->imgui)(not_charsel_or_loading, hide_if_combat_or_ooc);
 }
 
 void LegacyAddon::CallOptionsTab() {

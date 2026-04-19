@@ -59,7 +59,7 @@ typedef struct arcdps_exports {
 
 typedef void     (*combat_cb_t)(cbtevent*, ag*, ag*, const char*, uint64_t, uint64_t);
 typedef uint32_t (*wndproc_cb_t)(HWND, UINT, WPARAM, LPARAM);
-typedef void     (*imgui_cb_t)(uint32_t not_charsel_or_loading);
+typedef void     (*imgui_cb_t)(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc);
 typedef void     (*options_end_cb_t)();        /* a.k.a. options_tab */
 typedef uint32_t (*options_windows_cb_t)(const char*);
 

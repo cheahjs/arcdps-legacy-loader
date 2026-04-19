@@ -144,11 +144,12 @@ void UnloadAll() {
     g_addons.clear();  /* ~LegacyAddon runs mod_release + FreeLibrary */
 }
 
-void DispatchImgui(uint32_t flag) {
+void DispatchImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc) {
     ImguiLegacy::NewFrame();
     {
         std::shared_lock lk(g_mutex);
-        for (auto& a : g_addons) if (a.Loaded()) a.CallImgui(flag);
+        for (auto& a : g_addons)
+            if (a.Loaded()) a.CallImgui(not_charsel_or_loading, hide_if_combat_or_ooc);
     }
     SettingsWindow::Draw();
     ImguiLegacy::EndFrameAndRender();

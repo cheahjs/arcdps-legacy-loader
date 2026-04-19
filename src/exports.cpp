@@ -15,8 +15,8 @@ static constexpr uint32_t IMGUI_VERSION_NUM_1_92_7 = 19270;
 namespace {
     arcdps_exports g_exports{};
 
-    void cb_imgui(uint32_t not_charsel_or_loading) {
-        AddonManager::DispatchImgui(not_charsel_or_loading);
+    void cb_imgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc) {
+        AddonManager::DispatchImgui(not_charsel_or_loading, hide_if_combat_or_ooc);
     }
     /* options_end/options_windows intentionally left null on our export table:
      * arcdps 1.92.7 would call them in its own imgui context, which we can't

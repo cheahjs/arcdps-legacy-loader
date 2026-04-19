@@ -42,7 +42,7 @@ public:
     uint32_t    ImguiVers() const { return m_imguivers; }
     const std::wstring& Path() const { return m_path; }
 
-    void CallImgui(uint32_t not_charsel_or_loading);
+    void CallImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc);
     void CallOptionsTab();
     uint32_t CallOptionsWindows(const char* window_name);
     void CallCombat(cbtevent*, ag*, ag*, const char*, uint64_t, uint64_t);

@@ -29,7 +29,7 @@ namespace AddonManager {
 
     /* Fanout of arcdps callbacks. The loader's own mod_init wires its
      * exports table entries to these. */
-    void DispatchImgui(uint32_t not_charsel_or_loading);
+    void DispatchImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc);
     void DispatchCombat(cbtevent*, ag*, ag*, const char*, uint64_t, uint64_t);
     void DispatchCombatLocal(cbtevent*, ag*, ag*, const char*, uint64_t, uint64_t);
     uint32_t DispatchWndFilter(HWND, UINT, WPARAM, LPARAM);
