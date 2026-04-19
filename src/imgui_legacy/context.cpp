@@ -126,13 +126,15 @@ void SaveAndDetachFromAddons() {
         ImGui::SaveIniSettingsToDisk(g.IO.IniFilename);
     g.IO.IniFilename = nullptr;
 
+    /* Fire Shutdown hooks NOW, while addon-registered callbacks still point
+     * into mapped code. We skip DestroyContext at process exit (see Shutdown)
+     * so this is the only chance these hooks get to observe teardown. */
+    ImGui::CallContextHooks(&g, ImGuiContextHookType_Shutdown);
+
     /* Drop the default Window/Table handlers too — we've already saved, and
      * anything an addon pushed afterwards sits at a higher index we'd have
      * to scan for. Wholesale clear is simpler and equally correct. */
     g.SettingsHandlers.clear();
-
-    /* ContextHooks live in the same category: addon-registered callbacks
-     * would fire during CallContextHooks(Shutdown) on now-unmapped code. */
     g.Hooks.clear();
 }
 
@@ -147,7 +149,21 @@ void Shutdown() {
         ImGui_ImplWin32_Shutdown();
         g_backend_up = false;
     }
-    if (g_ctx) { ImGui::DestroyContext(g_ctx); g_ctx = nullptr; }
+    /* Deliberately skip ImGui::DestroyContext. It runs ImGui::Shutdown which
+     * walks g.Windows (and a dozen other ImVectors) and IM_FREEs each entry
+     * through arcdps's freefn. Legacy addons have already been FreeLibrary'd
+     * by this point, which tears down their private CRT heaps — any
+     * ImGuiWindow name/buffer an addon allocated via its own static imgui
+     * (before calling SetAllocatorFunctions, or without calling it at all)
+     * now sits on a dead heap, and RtlSizeHeap crashes on the foreign block.
+     *
+     * Trade-off: we leak the context, the font atlas, and all window /
+     * ImVector buffers. Shutdown is only reached at process exit (arcdps
+     * mod_release) or Init-failure — in both cases the OS reclaims the
+     * address space within microseconds. Ini is already saved, shutdown
+     * hooks already fired, backends already torn down, D3D ComPtrs Reset
+     * below; nothing external outlives us. */
+    g_ctx = nullptr;
     g_swap.Reset();
     g_immediate.Reset();
     g_device.Reset();
