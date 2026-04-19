@@ -23,7 +23,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: arcdps_legacy_loader-msvc-x64
-          path: build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll
+          path: |
+            build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll
+            build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.pdb
           if-no-files-found: error
 
   mingw:
@@ -99,11 +101,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arcdps_legacy_loader-msvc-x64-signed
-          path: arcdps_legacy_loader.dll
+          path: |
+            arcdps_legacy_loader.dll
+            arcdps_legacy_loader.pdb
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: arcdps_legacy_loader.dll
+          files: |
+            arcdps_legacy_loader.dll
+            arcdps_legacy_loader.pdb
