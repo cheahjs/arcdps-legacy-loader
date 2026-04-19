@@ -163,6 +163,10 @@ void Draw() {
             }
             ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Appearance")) {
+            ImGui::ShowStyleEditor();
+            ImGui::EndTabItem();
+        }
         if (ImGui::BeginTabItem("Extensions")) {
             if (ImGui::BeginTabBar("legacy_addons")) {
                 for (size_t i = 0; i < AddonManager::Count(); ++i) {
