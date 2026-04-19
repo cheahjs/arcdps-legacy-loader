@@ -3,6 +3,7 @@
 #include "addon/legacy_addon.h"
 #include "config/config.h"
 #include "imgui_legacy/context.h"
+#include "version.h"
 
 #include <imgui.h>
 #include <filesystem>
@@ -146,6 +147,8 @@ void Draw() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("About")) {
+            ImGui::Text("legacy_loader %s", ARCDPS_LL_VERSION_STRING);
+            ImGui::Separator();
             DrawAddonsInfo();
             ImGui::EndTabItem();
         }

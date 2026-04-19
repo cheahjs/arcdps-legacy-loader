@@ -1,11 +1,24 @@
 cmake_minimum_required(VERSION 3.20)
-project(arcdps_legacy_loader VERSION 0.1.0 LANGUAGES C CXX)
+project(arcdps_legacy_loader VERSION 0.1.0 LANGUAGES C CXX RC)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(OUTPUT_NAME "arcdps_legacy_loader")
 set(TARGET_NAME "arcdps_legacy_loader")
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(GitVersion)
+
+set(GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/version.h.in
+    ${GENERATED_DIR}/version.h
+    @ONLY)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/version.rc.in
+    ${GENERATED_DIR}/version.rc
+    @ONLY)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -70,6 +83,7 @@ add_library(${TARGET_NAME} SHARED
     src/logging/log.cpp
     src/ui/settings_window.cpp
     def/arcdps_legacy_loader.def
+    ${GENERATED_DIR}/version.rc
     $<TARGET_OBJECTS:imgui_1927>
 )
 
@@ -82,6 +96,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 target_include_directories(${TARGET_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
+    ${GENERATED_DIR}
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE imgui_180 d3d11 dxgi d3dcompiler)

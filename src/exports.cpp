@@ -5,6 +5,7 @@
 #include "imgui_legacy/context.h"
 #include "logging/log.h"
 #include "proxy/arcdps_proxy.h"
+#include "version.h"
 
 /* arcdps 1.92.7 checks imguivers against this value. We statically link
  * imgui 1.80 for the legacy-addon context but report 19270 to arcdps.
@@ -44,7 +45,9 @@ namespace {
         g_exports.sig        = 0x7A11EDAD;
         g_exports.imguivers  = IMGUI_VERSION_NUM_1_92_7;
         g_exports.out_name   = "legacy_loader";
-        g_exports.out_build  = __DATE__ " " __TIME__;
+        g_exports.out_build  = ARCDPS_LL_VERSION_STRING;
+        Log::Msg("legacy_loader %s (built %s %s)",
+                 ARCDPS_LL_VERSION_STRING, __DATE__, __TIME__);
         g_exports.imgui           = reinterpret_cast<void*>(&cb_imgui);
         g_exports.options_end     = nullptr;
         g_exports.options_windows = nullptr;
