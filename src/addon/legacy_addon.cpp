@@ -61,6 +61,15 @@ bool LegacyAddon::Load(const std::wstring& path, void* legacy_imguictx) {
     return true;
 }
 
+uintptr_t LegacyAddon::End() const {
+    if (!m_module) return 0;
+    const auto* base = reinterpret_cast<const uint8_t*>(m_module);
+    const auto* dos  = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE) return 0;
+    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
+    return reinterpret_cast<uintptr_t>(base) + nt->OptionalHeader.SizeOfImage;
+}
+
 void LegacyAddon::Reject(Status reason) {
     Unload();
     m_status = reason;

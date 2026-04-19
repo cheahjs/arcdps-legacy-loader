@@ -83,8 +83,14 @@ namespace {
                     addon.Reject(LegacyAddon::Status::DuplicateSig);
                 } else {
                     by_sig[addon.Sig()] = g_addons.size();
-                    Log::Msg("AddonManager: loaded %s (name=%s build=%s sig=%u)",
-                             name.c_str(), addon.Name(), addon.Build(), addon.Sig());
+                    /* Mirror arcdps's "extensions:" line so load state is
+                     * uniform across the two logs. */
+                    Log::Msg("AddonManager: loaded %s 0x%llX-0x%llX (%s, %s, 0x%08X)",
+                             addon.Name(),
+                             static_cast<unsigned long long>(addon.Base()),
+                             static_cast<unsigned long long>(addon.End()),
+                             entry.path().string().c_str(),
+                             addon.Build(), addon.Sig());
                 }
             } else {
                 Log::Msg("AddonManager: failed to load %s", name.c_str());

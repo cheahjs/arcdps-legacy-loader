@@ -42,6 +42,11 @@ public:
     uint32_t    ImguiVers() const { return m_imguivers; }
     const std::wstring& Path() const { return m_path; }
 
+    /* Load address + SizeOfImage from the PE header, so callers can log the
+     * same "0xBASE-0xEND" range arcdps prints for its own extensions. */
+    uintptr_t   Base()      const { return reinterpret_cast<uintptr_t>(m_module); }
+    uintptr_t   End()       const;
+
     void CallImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc);
     void CallOptionsTab();
     uint32_t CallOptionsWindows(const char* window_name);
