@@ -210,6 +210,8 @@ bool HandleKey(HWND, UINT msg, WPARAM wp, LPARAM lp) {
         return true;
     }
 
+    if (g_open && wp == VK_ESCAPE) { g_open = false; return true; }
+
     const auto& hk = Config::ToggleKey();
     if (static_cast<int>(wp) != hk.vk) return false;
     if (hk.shift && !(GetKeyState(VK_SHIFT)   & 0x8000)) return false;
