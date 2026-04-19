@@ -24,4 +24,11 @@ namespace Config {
      * legacy addons ship their own styling that would otherwise fight
      * ours, or the user may prefer the stock 1.80 look. */
     bool& StyleFollowsArcdps();
+
+    /* When true (default), each frame the loader mirrors arcdps's
+     * top-level windows into the legacy 1.80 context as invisible
+     * shadows with matching names, so legacy addons that anchor their
+     * own windows against arcdps windows (e.g. Boon Table's relative
+     * positioning) can still resolve them via ImGui::FindWindowByID. */
+    bool& MirrorArcdpsWindows();
 }

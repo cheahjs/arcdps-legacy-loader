@@ -32,6 +32,7 @@ FetchContent_MakeAvailable(imgui_1927)
 
 add_library(imgui_1927 OBJECT
     src/imgui_legacy/arc_style_reader.cpp
+    src/imgui_legacy/arc_windows_reader.cpp
 )
 target_include_directories(imgui_1927 PRIVATE
     ${imgui_1927_SOURCE_DIR}
@@ -64,6 +65,7 @@ add_library(${TARGET_NAME} SHARED
     src/config/config.cpp
     src/imgui_legacy/context.cpp
     src/imgui_legacy/arc_style_apply.cpp
+    src/imgui_legacy/arc_windows_mirror.cpp
     src/proxy/arcdps_proxy.cpp
     src/logging/log.cpp
     src/ui/settings_window.cpp

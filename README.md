@@ -39,6 +39,13 @@ By default the loader copies arcdps's live ImGuiStyle onto its private
 useful if a legacy addon ships its own styling that fights the ported
 one, or if the read fails a plausibility check on your arcdps build.
 
+Also by default, arcdps's top-level windows are mirrored into the 1.80
+context each frame as invisible shadows at matching names. Legacy
+addons that anchor their own windows against arcdps windows (e.g. Boon
+Table's relative positioning, which resolves the anchor via
+`ImGui::FindWindowByID`) work transparently as a result. Disable with
+`mirror_arcdps_windows=0` in `loader.ini`.
+
 ## Building
 
 ### Cross-compile from macOS / Linux

@@ -2,6 +2,8 @@
 
 #include "arc_style_snapshot.h"
 #include "arc_style_apply.h"
+#include "arc_windows_snapshot.h"
+#include "arc_windows_mirror.h"
 #include "config/config.h"
 #include "logging/log.h"
 #include "proxy/arcdps_proxy.h"
@@ -108,6 +110,17 @@ void NewFrame() {
         ImGui::GetIO().MousePos = ImVec2((float)pt.x, (float)pt.y);
 
     ImGui::NewFrame();
+
+    /* Mirror arcdps's live window list as invisible shadow windows so
+     * addons that anchor their UI against arcdps windows (resolved via
+     * ImGui::FindWindowByID) see matching entries on our 1.80 ctx. Must
+     * run after NewFrame — SetNextWindowPos/Begin are frame-scoped. */
+    if (Config::MirrorArcdpsWindows()) {
+        ArcWindowList list;
+        list.count = 0;
+        if (ArcWindowsReader_Capture(ArcdpsProxy::Get().arc_imguictx, &list) && list.count > 0)
+            ImguiLegacy::MirrorArcdpsWindows(list);
+    }
 }
 
 void EndFrameAndRender() {

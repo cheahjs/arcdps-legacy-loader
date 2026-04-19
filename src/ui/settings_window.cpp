@@ -61,6 +61,10 @@ void Draw() {
             if (ImGui::Button("Re-capture")) ImguiLegacy::RefreshStyle(follow);
             ImGui::TextDisabled("Copies arcdps's ImGui theme onto the legacy context.");
 
+            bool& mirror = Config::MirrorArcdpsWindows();
+            if (ImGui::Checkbox("Mirror arcdps windows", &mirror)) Config::Save();
+            ImGui::TextDisabled("Lets legacy addons anchor their UI against arcdps windows.");
+
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Windows")) {
