@@ -1,7 +1,7 @@
 # arcdps-legacy-loader
 
 An arcdps extension that keeps old ImGui 1.80 arcdps addons working after
-arcdps updates to ImGui 1.92.7+.
+arcdps updates to ImGui 1.92.7.
 
 ## What it does
 
@@ -24,9 +24,7 @@ them.
 ## Installation
 
 1. Drop `arcdps_legacy_loader.dll` into `<gw2-root>/` next to
-   `d3d11.dll` / `arcdps.dll`. arcdps scans the game directory for
-   extension DLLs — `addons/arcdps/` is a config/data directory, not an
-   install target.
+   `d3d11.dll` / `arcdps.dll`.
 2. Put your legacy ImGui 1.80 addon DLLs into
    `<gw2-root>/addons/arcdps/legacy/`.
 3. Launch. The loader appears in arcdps's extension list and loads the
@@ -75,11 +73,6 @@ Output: `build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll`.
 
 ## Known limitations
 
-- The reported `imguivers` is hard-coded to `19270` in `src/exports.cpp`.
-  Bump it if arcdps moves to a newer ImGui.
-- `arcdps_exports::sig` is hard-coded (`0x7A11EDAD`). arcdps de-duplicates
-  addons by this value, so another addon picking the same constant would
-  collide. If you fork the loader, pick your own.
 - `options_windows(name)` overrides against arcdps's built-in window list
   are not wired up - the loader does not know arcdps's window registry.
   Legacy addons' own checkboxes drawn from `options_windows(nullptr)` work
@@ -88,3 +81,4 @@ Output: `build/msvc-x64/RelWithDebInfo/arcdps_legacy_loader.dll`.
   `ImGui_ImplWin32_WndProcHandler` so that `SetCapture` /`ReleaseCapture`
   inside ImGui do not clobber the game's own Win32 mouse capture (GW2's
   right-click-to-rotate-camera relies on it).
+- Input handling with respect to arcdps modifier settings is still lacking.

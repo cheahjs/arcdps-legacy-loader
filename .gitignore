@@ -3,3 +3,6 @@ build/
 .idea/
 *.user
 CMakeUserPresets.json
+scripts/build-and-deploy.sh
+.env
+
