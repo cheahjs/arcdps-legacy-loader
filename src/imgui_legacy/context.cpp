@@ -9,6 +9,7 @@
 #include "proxy/arcdps_proxy.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 #include <d3d11.h>
@@ -95,6 +96,20 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
                  "legacy render path will be dark");
     }
     g_backend_up = true;
+
+    /* Settle SettingsLoaded / SettingsWindows NOW, while we're still single-
+     * threaded, so AddonManager::LoadAllAsync's background mod_init calls
+     * can't race with NewFrame's first-frame UpdateSettings path:
+     *     if (!SettingsLoaded) { IM_ASSERT(SettingsWindows.empty()); ... }
+     * Any addon that touches our shared context during its init and lands
+     * a WindowSettings entry (e.g. a handler WriteAll or stray Begin) while
+     * SettingsLoaded is still false trips that assert. LoadIniSettingsFromDisk
+     * is explicitly safe between CreateContext and the first NewFrame; it's a
+     * no-op when the ini file doesn't exist, so we flip the flag ourselves
+     * to cover the fresh-install case. */
+    ImGui::LoadIniSettingsFromDisk(g_ini_path.c_str());
+    g_ctx->SettingsLoaded = true;
+
     return g_ctx;
 }
 
