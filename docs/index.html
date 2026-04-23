@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>arcdps legacy loader — addon compatibility</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0e1116;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --link: #58a6ff;
+    --ok: #238636;
+    --warn: #9e6a03;
+    --info: #1f6feb;
+    --dim: #6e7681;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #ffffff;
+      --panel: #f6f8fa;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --link: #0969da;
+      --ok: #1a7f37;
+      --warn: #9a6700;
+      --info: #0969da;
+      --dim: #8c959f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+  p.lead { margin: 0 0 1.5rem; color: var(--muted); }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .legend { display: flex; gap: 1rem; flex-wrap: wrap; margin: 0 0 1rem; font-size: .85rem; color: var(--muted); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: .6rem .75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  th {
+    background: color-mix(in srgb, var(--panel) 70%, var(--border));
+    font-weight: 600;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    color: var(--muted);
+  }
+  td.muted, .muted { color: var(--muted); }
+  .badge {
+    display: inline-block;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge.status-migrated { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+  .badge.status-in_progress { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .badge.status-not_migrated { background: transparent; color: var(--muted); border-color: var(--border); }
+  .badge.lang { background: color-mix(in srgb, var(--info) 15%, transparent); color: var(--info); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+  footer { margin-top: 2rem; font-size: .85rem; color: var(--muted); }
+  code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--panel); padding: .1rem .3rem; border-radius: 3px; border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<main>
+  <h1>arcdps legacy loader — addon compatibility</h1>
+  <p class="lead">
+    Migration status of known arcdps addons for the
+    <a href="https://github.com/cheahjs/arcdps-legacy-loader">legacy loader</a>.
+    Pre-release links are test builds — expect bugs.
+  </p>
+
+  <div class="legend">
+    <span><span class="badge status-migrated">migrated</span> ready to use</span>
+    <span><span class="badge status-in_progress">in progress</span> build available for testing</span>
+    <span><span class="badge status-not_migrated">not migrated</span> no work yet</span>
+  </div>
+
+  <table id="addons">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Author</th>
+        <th>Language</th>
+        <th>Status</th>
+        <th>Pre-release</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="6" class="muted">Loading…</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Source of truth: <code>docs/addons.js</code>. Edits welcome via PR.
+  </footer>
+</main>
+
+<script src="addons.js"></script>
+<script>
+  const STATUS_LABEL = {
+    not_migrated: "not migrated",
+    in_progress: "in progress",
+    migrated: "migrated",
+  };
+
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null) continue;
+      if (k === "class") node.className = v;
+      else if (k === "href") node.setAttribute("href", v);
+      else node.setAttribute(k, v);
+    }
+    for (const c of children) {
+      if (c == null) continue;
+      node.append(c.nodeType ? c : document.createTextNode(c));
+    }
+    return node;
+  }
+
+  function statusRank(s) {
+    return { migrated: 0, in_progress: 1, not_migrated: 2 }[s] ?? 3;
+  }
+
+  function load() {
+    const tbody = document.querySelector("#addons tbody");
+    const data = window.ADDONS;
+    if (!data) throw new Error("addons.js did not load");
+    const rows = [...data.addons].sort((a, b) => {
+      const d = statusRank(a.migration_status) - statusRank(b.migration_status);
+      return d !== 0 ? d : a.name.localeCompare(b.name);
+    });
+
+    tbody.replaceChildren(...rows.map((a) => {
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, el("a", { href: a.repo, target: "_blank", rel: "noopener" }, a.name)),
+        el("td", { class: "muted" }, a.author),
+        el("td", {}, el("span", { class: "badge lang" }, a.language)),
+        el("td", {}, el("span", { class: `badge status-${a.migration_status}` }, STATUS_LABEL[a.migration_status] ?? a.migration_status)),
+        el("td", {}, a.prerelease_url
+          ? el("a", { href: a.prerelease_url, target: "_blank", rel: "noopener" }, "download")
+          : el("span", { class: "muted" }, "—")),
+        el("td", { class: "muted" }, a.notes ?? ""),
+      );
+      return tr;
+    }));
+  }
+
+  try { load(); } catch (err) {
+    document.querySelector("#addons tbody").replaceChildren(
+      el("tr", {}, el("td", { colspan: "6", class: "muted" }, `Failed to load: ${err.message}`)),
+    );
+  }
+</script>
+</body>
+</html>
