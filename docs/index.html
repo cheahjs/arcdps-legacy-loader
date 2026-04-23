@@ -167,7 +167,11 @@
         el("td", {}, a.prerelease_url
           ? el("a", { href: a.prerelease_url, target: "_blank", rel: "noopener" }, "download")
           : el("span", { class: "muted" }, "—")),
-        el("td", { class: "muted" }, a.notes ?? ""),
+        (() => {
+          const td = el("td", { class: "muted" });
+          if (a.notes) td.innerHTML = a.notes;
+          return td;
+        })(),
       );
       return tr;
     }));

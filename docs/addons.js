@@ -72,7 +72,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: null,
+      notes: "<a href=\"https://github.com/Krappa322/arcdps_healing_stats/pull/63\">In progress PR</a>",
     },
     {
       name: "Killproof.me",
@@ -90,7 +90,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: null,
+      notes: "<a href=\"https://github.com/LincoHd/GW2-ArcDPS-Mechanics-Log/tree/imgui-1.92-update\">In progress branch</a>",
     },
     {
       name: "Player List",
