@@ -16,9 +16,9 @@ window.ADDONS = {
       author: "knoxfighter",
       repo: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table",
       language: "C++",
-      migration_status: "not_migrated",
+      migration_status: "in_progress",
       prerelease_url: null,
-      notes: null,
+      notes: "<a href=\"https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table/pull/51\">In progress PR</a>",
     },
     {
       name: "Buddy",
