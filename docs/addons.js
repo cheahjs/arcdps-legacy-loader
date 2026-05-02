@@ -72,7 +72,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: "<a href=\"https://github.com/Krappa322/arcdps_healing_stats/pull/63\">In progress PR</a>",
+      notes: "<a href=\"https://github.com/Krappa322/arcdps_healing_stats/pull/63\">In progress PR</a><br><a href=\"https://discord.com/channels/456611641526845473/828295240309145600/1497622580218302464\">In progress Discord upload</a>",
     },
     {
       name: "Killproof.me",
