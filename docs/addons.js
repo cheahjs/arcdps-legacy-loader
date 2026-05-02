@@ -90,7 +90,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: "<a href=\"https://github.com/LincoHd/GW2-ArcDPS-Mechanics-Log/tree/imgui-1.92-update\">In progress branch</a>",
+      notes: "<a href=\"https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log/pull/8\">In progress PR</a>",
     },
     {
       name: "Player List",
