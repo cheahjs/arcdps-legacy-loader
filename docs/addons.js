@@ -1,5 +1,6 @@
 // Source of truth for the addon compatibility table.
 // migration_status: not_migrated | in_progress | migrated.
+// prerelease_discord_url can be used for Discord-hosted test builds.
 window.ADDONS = {
   addons: [
     {
@@ -72,7 +73,8 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: "<a href=\"https://github.com/Krappa322/arcdps_healing_stats/pull/63\">In progress PR</a><br><a href=\"https://discord.com/channels/456611641526845473/828295240309145600/1497622580218302464\">In progress Discord upload</a>",
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/828295240309145600/1497622580218302464",
+      notes: "<a href=\"https://github.com/Krappa322/arcdps_healing_stats/pull/63\">In progress PR</a>",
     },
     {
       name: "Killproof.me",
@@ -126,7 +128,8 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: "<a href=\"https://discord.com/channels/456611641526845473/953659301162004591/1500140192680644788\">In progress Discord upload</a>",
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/953659301162004591/1500140192680644788",
+      notes: null,
     },
   ],
 };

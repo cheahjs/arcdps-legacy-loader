@@ -148,6 +148,25 @@
     return { migrated: 0, in_progress: 1, not_migrated: 2 }[s] ?? 3;
   }
 
+  function isDiscordUrl(url) {
+    try {
+      const { hostname } = new URL(url);
+      return ["discord.com", "discordapp.com", "discord.gg"].some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function prereleaseCell(a) {
+    const url = a.prerelease_discord_url ?? a.prerelease_url;
+    if (!url) return el("span", { class: "muted" }, "—");
+
+    const label = isDiscordUrl(url) ? "Discord" : "download";
+    return el("a", { href: url, target: "_blank", rel: "noopener" }, label);
+  }
+
   function load() {
     const tbody = document.querySelector("#addons tbody");
     const data = window.ADDONS;
@@ -164,9 +183,7 @@
         el("td", { class: "muted" }, a.author),
         el("td", {}, el("span", { class: "badge lang" }, a.language)),
         el("td", {}, el("span", { class: `badge status-${a.migration_status}` }, STATUS_LABEL[a.migration_status] ?? a.migration_status)),
-        el("td", {}, a.prerelease_url
-          ? el("a", { href: a.prerelease_url, target: "_blank", rel: "noopener" }, "download")
-          : el("span", { class: "muted" }, "—")),
+        el("td", {}, prereleaseCell(a)),
         (() => {
           const td = el("td", { class: "muted" });
           if (a.notes) td.innerHTML = a.notes;
