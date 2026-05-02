@@ -16,6 +16,7 @@
 #include <dxgi.h>
 #include <wrl/client.h>
 #include <filesystem>
+#include <mutex>
 #include <string>
 
 using Microsoft::WRL::ComPtr;
@@ -27,6 +28,7 @@ namespace {
     ComPtr<IDXGISwapChain>      g_swap;
     HWND                  g_hwnd       = nullptr;
     bool                  g_backend_up = false;
+    std::recursive_mutex  g_mutex;
     /* Backing storage for ImGuiIO::IniFilename — imgui just stores the
      * pointer, so this must outlive the context. */
     std::string g_ini_path;
@@ -97,9 +99,8 @@ void* Init(void* id3dptr, uint32_t d3dversion) {
     }
     g_backend_up = true;
 
-    /* Settle SettingsLoaded / SettingsWindows NOW, while we're still single-
-     * threaded, so AddonManager::LoadAllAsync's background mod_init calls
-     * can't race with NewFrame's first-frame UpdateSettings path:
+    /* Settle SettingsLoaded / SettingsWindows NOW, before background legacy
+     * addon mod_init calls can hit NewFrame's first-frame UpdateSettings path:
      *     if (!SettingsLoaded) { IM_ASSERT(SettingsWindows.empty()); ... }
      * Any addon that touches our shared context during its init and lands
      * a WindowSettings entry (e.g. a handler WriteAll or stray Begin) while
@@ -289,6 +290,8 @@ void WndProc(HWND, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 void* Context() { return g_ctx; }
+
+std::recursive_mutex& Mutex() { return g_mutex; }
 
 bool RefreshStyle(bool follow) {
     if (!g_ctx) return false;

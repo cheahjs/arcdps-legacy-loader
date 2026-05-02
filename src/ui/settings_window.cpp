@@ -6,12 +6,13 @@
 #include "version.h"
 
 #include <imgui.h>
+#include <atomic>
 #include <filesystem>
 
 namespace {
     bool g_open                  = false;
     bool g_awaiting_rebind       = false;
-    bool g_failure_popup_pending = false;
+    std::atomic_bool g_failure_popup_pending = false;
 
     bool IsModifierVk(int vk) {
         return vk == VK_SHIFT   || vk == VK_LSHIFT   || vk == VK_RSHIFT
@@ -60,9 +61,8 @@ namespace {
 
     void DrawFailurePopup() {
         const char* id = "Legacy addon load issues";
-        if (g_failure_popup_pending) {
+        if (g_failure_popup_pending.exchange(false)) {
             ImGui::OpenPopup(id);
-            g_failure_popup_pending = false;
         }
 
         ImGui::SetNextWindowSize(ImVec2(560, 0), ImGuiCond_Appearing);
@@ -94,7 +94,7 @@ namespace SettingsWindow {
 void Toggle() { g_open = !g_open; }
 bool IsOpen() { return g_open; }
 
-void ShowLoadFailurePopup() { g_failure_popup_pending = true; }
+void ShowLoadFailurePopup() { g_failure_popup_pending.store(true); }
 
 void Draw() {
     /* Without this, ImGui calls would dereference a null GImGui. */

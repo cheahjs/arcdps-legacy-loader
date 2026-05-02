@@ -13,18 +13,19 @@ namespace AddonManager {
     void ForEach(const std::function<void(size_t, LegacyAddon&)>& fn);
     bool Empty();
 
-    /* Snapshot accessors. Only safe to call from the render thread, which
-     * is also where the background loader's appends become visible under
-     * the shared mutex — callers should not hold indices across frames. */
+    /* Snapshot accessors. Only safe to call from callback/UI code; callers
+     * should not hold indices across frames. */
     size_t Count();
     LegacyAddon& At(size_t i);
 
     /* Kick off a background thread that scans the legacy addon directory
-     * and loads each dll against our 1.80 imgui context. Returns
-     * immediately so arcdps's own init isn't blocked behind third-party
-     * addon load times. Call once, after ImguiLegacy::Init. */
+     * and loads each dll against our 1.80 imgui context. Addon init is
+     * serialized against render/WndProc via ImguiLegacy::Mutex(). */
     void LoadAllAsync(void* legacy_imguictx);
-    /* Joins the load thread before tearing down any loaded addons. */
+    /* Join the background loader without unloading anything. */
+    void WaitForLoadComplete();
+    /* Tears down any loaded addons. Call after WaitForLoadComplete and after
+     * ImguiLegacy::SaveAndDetachFromAddons(). */
     void UnloadAll();
 
     /* Fanout of arcdps callbacks. The loader's own mod_init wires its

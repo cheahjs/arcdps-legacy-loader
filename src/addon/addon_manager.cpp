@@ -21,9 +21,8 @@ namespace {
     constexpr uint32_t LEGACY_IMGUI_VERSION_NUM = 18000;
 
     /* g_addons is written by the background load thread and read by the
-     * render thread (dispatch + UI). Guarded by g_mutex: exclusive lock on
-     * append, shared lock on read. Only the load thread ever writes, so
-     * reads can use shared locks freely. */
+     * render/combat/UI callbacks. Guarded by g_mutex: exclusive lock on
+     * append/clear, shared lock on read. */
     std::shared_mutex       g_mutex;
     std::vector<LegacyAddon> g_addons;
     std::thread              g_load_thread;
@@ -58,7 +57,7 @@ namespace {
         }
 
         /* Map first-loaded sig -> index into g_addons, so we can label the
-         * second loader as the duplicate. Only this thread writes to
+         * second loader as the duplicate. Only the load thread writes to
          * g_addons, so indexing into it outside the lock is safe. */
         std::unordered_map<uint32_t, size_t> by_sig;
 
@@ -67,7 +66,11 @@ namespace {
             if (entry.path().extension() != L".dll") continue;
 
             LegacyAddon addon;
-            const bool ok = addon.Load(entry.path().wstring(), legacy_imguictx);
+            bool ok = false;
+            {
+                std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
+                ok = addon.Load(entry.path().wstring(), legacy_imguictx);
+            }
             const auto name = entry.path().filename().string();
 
             if (ok) {
@@ -75,11 +78,13 @@ namespace {
                 if (vers != 0 && vers != LEGACY_IMGUI_VERSION_NUM) {
                     Log::Msg("AddonManager: %s rejected: imguivers %u != %u",
                              name.c_str(), vers, LEGACY_IMGUI_VERSION_NUM);
+                    std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
                     addon.Reject(LegacyAddon::Status::ImguiVersionMismatch);
                 } else if (auto it = by_sig.find(addon.Sig());
                            it != by_sig.end() && addon.Sig() != 0) {
                     Log::Msg("AddonManager: %s rejected: duplicate sig %u (also in %s)",
                              name.c_str(), addon.Sig(), g_addons[it->second].Name());
+                    std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
                     addon.Reject(LegacyAddon::Status::DuplicateSig);
                 } else {
                     by_sig[addon.Sig()] = g_addons.size();
@@ -102,9 +107,8 @@ namespace {
             }
         }
 
-        /* If any entry isn't in the Loaded state, prompt the user. The
-         * flag is atomic so the render thread picks it up on its next
-         * DispatchImgui. */
+        /* If any entry isn't in the Loaded state, prompt the user on the
+         * first DispatchImgui after mod_init returns. */
         bool has_failure = false;
         {
             std::shared_lock lk(g_mutex);
@@ -147,12 +151,18 @@ void LoadAllAsync(void* legacy_imguictx) {
     g_load_thread = std::thread(LoadWorker, legacy_imguictx);
 }
 
-void UnloadAll() {
+void WaitForLoadComplete() {
     if (g_load_thread.joinable()) g_load_thread.join();
+}
+
+void UnloadAll() {
+    WaitForLoadComplete();
+    std::unique_lock lk(g_mutex);
     g_addons.clear();  /* ~LegacyAddon runs mod_release + FreeLibrary */
 }
 
 void DispatchImgui(uint32_t not_charsel_or_loading, uint32_t hide_if_combat_or_ooc) {
+    std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
     ImguiLegacy::NewFrame();
     {
         std::shared_lock lk(g_mutex);
@@ -174,6 +184,7 @@ void DispatchCombatLocal(cbtevent* ev, ag* src, ag* dst, const char* sk, uint64_
 }
 
 uint32_t DispatchWndFilter(HWND h, UINT m, WPARAM w, LPARAM l) {
+    std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
     std::shared_lock lk(g_mutex);
     uint32_t out = m;
     for (auto& a : g_addons) {
@@ -185,6 +196,8 @@ uint32_t DispatchWndFilter(HWND h, UINT m, WPARAM w, LPARAM l) {
 }
 
 uint32_t DispatchWndNoFilter(HWND h, UINT m, WPARAM w, LPARAM l) {
+    std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
+
     /* Route all messages through our 1.80 backend so input reaches legacy
      * windows regardless of whether arcdps's own imgui claims capture. */
     ImguiLegacy::WndProc(h, m, w, l);

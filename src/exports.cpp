@@ -7,6 +7,8 @@
 #include "proxy/arcdps_proxy.h"
 #include "version.h"
 
+#include <mutex>
+
 /* arcdps 1.92.7 checks imguivers against this value. We statically link
  * imgui 1.80 for the legacy-addon context but report 19270 to arcdps.
  * (Verified empirically: 19270 loads, 19207/18000 both get rejected.) */
@@ -63,6 +65,8 @@ namespace {
     }
 
     void mod_release() {
+        AddonManager::WaitForLoadComplete();
+        std::lock_guard<std::recursive_mutex> ctx_lk(ImguiLegacy::Mutex());
         /* Persist ini + sever cross-module pointers (settings handlers, hooks)
          * BEFORE FreeLibrary'ing legacy addons. If we unloaded first,
          * ImGui::Shutdown's save path would call WriteAllFn on a handler the

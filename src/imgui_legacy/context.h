@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <cstdint>
+#include <mutex>
 
 /* Owns a private imgui 1.80 ImGuiContext plus its dx11/win32 backends.
  * All legacy addons render through this context. */
@@ -31,6 +32,10 @@ namespace ImguiLegacy {
     void WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
     void* Context();  /* ImGuiContext* — for handing to legacy addons */
+
+    /* Serializes all access to the shared 1.80 context. Legacy addon init can
+     * run on a background thread, but ImGui itself is not thread-safe. */
+    std::recursive_mutex& Mutex();
 
     /* Re-read arcdps's ImGuiStyle and apply it to our 1.80 context, or (if
      * `follow` is false) reset our context to stock 1.80 defaults.
