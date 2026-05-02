@@ -124,9 +124,9 @@ window.ADDONS = {
       author: "Krappa322",
       repo: "https://github.com/Krappa322/arcdps_unofficial_extras_releases",
       language: "C++",
-      migration_status: "not_migrated",
+      migration_status: "in_progress",
       prerelease_url: null,
-      notes: null,
+      notes: "<a href=\"https://discord.com/channels/456611641526845473/953659301162004591/1500140192680644788\">In progress Discord upload</a>",
     },
   ],
 };
