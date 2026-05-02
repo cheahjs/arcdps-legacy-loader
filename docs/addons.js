@@ -19,7 +19,8 @@ window.ADDONS = {
       language: "C++",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: "<a href=\"https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table/pull/51\">In progress PR</a>",
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/718867761056579614/1500254499317485709",
+      notes: "ImGui updated, working on arc event API changes",
     },
     {
       name: "Buddy",
