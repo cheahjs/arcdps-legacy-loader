@@ -20,7 +20,7 @@ window.ADDONS = {
       migration_status: "in_progress",
       prerelease_url: null,
       prerelease_discord_url: "https://discord.com/channels/456611641526845473/718867761056579614/1500254499317485709",
-      notes: "ImGui updated, working on arc event API changes",
+      notes: "",
     },
     {
       name: "Buddy",
