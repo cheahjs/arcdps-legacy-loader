@@ -46,7 +46,7 @@ window.ADDONS = {
       repo: "https://github.com/cheahjs/arcdps-chat-log",
       language: "Rust",
       migration_status: "in_progress",
-      prerelease_url: "https://github.com/cheahjs/arcdps-chat-log/releases/tag/v0.7.0-imgui192.0",
+      prerelease_url: "https://github.com/cheahjs/arcdps-chat-log/releases/tag/v0.7.0-imgui192.1",
       notes: null,
     },
     {
@@ -110,7 +110,7 @@ window.ADDONS = {
       repo: "https://github.com/cheahjs/arcdps-squad-ready-plugin",
       language: "C++",
       migration_status: "in_progress",
-      prerelease_url: "https://github.com/cheahjs/arcdps-squad-ready-plugin/releases/tag/v0.6.1-imgui192.0",
+      prerelease_url: "https://github.com/cheahjs/arcdps-squad-ready-plugin/releases/tag/v0.8.0-rustrc.1",
       notes: null,
     },
     {
