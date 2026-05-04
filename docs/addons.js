@@ -82,8 +82,9 @@ window.ADDONS = {
       author: "knoxfighter",
       repo: "https://github.com/knoxfighter/arcdps-killproof.me-plugin",
       language: "C++",
-      migration_status: "not_migrated",
+      migration_status: "migrated",
       prerelease_url: null,
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/788949526337421333/1500970018706428025",
       notes: null,
     },
     {
