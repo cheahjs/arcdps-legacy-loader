@@ -8,9 +8,9 @@
  * All legacy addons render through this context. */
 namespace ImguiLegacy {
     /* Build context + dx11 backend from arcdps's swapchain pointer.
-     * id3dptr is IDXGISwapChain* when d3dversion==11. Returns the
+     * id3dptr is IDXGISwapChain* (modern arcdps is DX11-only). Returns the
      * ImGuiContext* (opaque to callers — pass through to legacy mod_init). */
-    void* Init(void* id3dptr, uint32_t d3dversion);
+    void* Init(void* id3dptr);
 
     /* Persist window positions and sever any cross-module pointers from the
      * context into legacy addon DLLs (SettingsHandlers' WriteAllFn, Hooks'

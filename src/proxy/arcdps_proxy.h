@@ -9,15 +9,16 @@
 struct ArcdpsHandoff {
     const char* arcversion   = nullptr;
     void*       arc_imguictx = nullptr;  /* 1.92.7 ctx — stashed, we don't use it */
-    void*       id3dptr      = nullptr;  /* IDXGISwapChain* (d3dversion==11) */
+    void*       id3dptr      = nullptr;  /* IDXGISwapChain* (always DX11) */
     HMODULE     arcdll       = nullptr;  /* arcdps HMODULE — e0..e10 live here */
     void*       mallocfn     = nullptr;
     void*       freefn       = nullptr;
-    uint32_t    d3dversion   = 0;
+    /* arcdps's IMGUI_VERSION_NUMBER (slot used to be d3dversion; repurposed). */
+    uint32_t    imguiversion = 0;
 };
 
 namespace ArcdpsProxy {
     void Capture(const char* arcversion, void* imguictx, void* id3dptr,
-                 HMODULE arcdll, void* mallocfn, void* freefn, uint32_t d3dversion);
+                 HMODULE arcdll, void* mallocfn, void* freefn, uint32_t imguiversion);
     const ArcdpsHandoff& Get();
 }

@@ -43,10 +43,15 @@ bool LegacyAddon::Load(const std::wstring& path, void* legacy_imguictx) {
 
     const auto& h = ArcdpsProxy::Get();
     /* Pass the legacy addon its 1.80 context while forwarding arcdps's real
-     * HMODULE as arcdll so its GetProcAddress("e3") resolves directly. */
+     * HMODULE as arcdll so its GetProcAddress("e3") resolves directly.
+     *
+     * Slot 7 was d3dversion in the API legacy addons were built against;
+     * modern arcdps repurposed it as imguiversion. We forward a literal 11
+     * so legacy addons see the d3dversion they expect, instead of arcdps's
+     * IMGUI_VERSION_NUMBER (e.g. 19270 for 1.92.7) which they'd reject. */
     auto mod_init = get_init(
         const_cast<char*>(h.arcversion), legacy_imguictx, h.id3dptr,
-        h.arcdll, h.mallocfn, h.freefn, h.d3dversion);
+        h.arcdll, h.mallocfn, h.freefn, 11u);
     if (!mod_init) { Reject(Status::InitFailed); return false; }
 
     m_exports = mod_init();

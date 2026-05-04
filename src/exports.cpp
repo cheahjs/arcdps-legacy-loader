@@ -58,7 +58,7 @@ namespace {
         g_exports.wnd_filter      = reinterpret_cast<void*>(&cb_wnd_filter);
         g_exports.wnd_nofilter    = reinterpret_cast<void*>(&cb_wnd_nofilter);
 
-        void* legacy_ctx = ImguiLegacy::Init(h.id3dptr, h.d3dversion);
+        void* legacy_ctx = ImguiLegacy::Init(h.id3dptr);
         if (!legacy_ctx) return &g_exports;
         AddonManager::LoadAllAsync(legacy_ctx);
         return &g_exports;
@@ -81,8 +81,8 @@ namespace {
  * return a pointer to a parameterless mod_init per the arcdps API. */
 extern "C" __declspec(dllexport) void* get_init_addr(
     char* arcversion, void* imguictx, void* id3dptr, HMODULE arcdll,
-    void* mallocfn, void* freefn, uint32_t d3dversion) {
-    ArcdpsProxy::Capture(arcversion, imguictx, id3dptr, arcdll, mallocfn, freefn, d3dversion);
+    void* mallocfn, void* freefn, uint32_t imguiversion) {
+    ArcdpsProxy::Capture(arcversion, imguictx, id3dptr, arcdll, mallocfn, freefn, imguiversion);
     return reinterpret_cast<void*>(&mod_init);
 }
 

@@ -37,10 +37,10 @@ namespace {
 
 namespace ImguiLegacy {
 
-void* Init(void* id3dptr, uint32_t d3dversion) {
+void* Init(void* id3dptr) {
     if (g_ctx) return g_ctx;
-    if (d3dversion != 11 || !id3dptr) {
-        Log::Msg("ImguiLegacy: unsupported d3dversion=%u", d3dversion);
+    if (!id3dptr) {
+        Log::Msg("ImguiLegacy: null id3dptr from arcdps");
         return nullptr;
     }
 

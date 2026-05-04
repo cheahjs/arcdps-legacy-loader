@@ -64,11 +64,14 @@ typedef void     (*options_end_cb_t)();        /* a.k.a. options_tab */
 typedef uint32_t (*options_windows_cb_t)(const char*);
 
 /* Per the arcdps API:
- *   void* get_init_addr(arcversion, imguictx, id3dptr, arcdll, mallocfn, freefn, d3dversion)
+ *   void* get_init_addr(arcversion, imguictx, id3dptr, arcdll, mallocfn, freefn, imguiversion)
  *     -> returns a pointer to the addon's parameterless mod_init.
  *   arcdps_exports* mod_init(void)
  *     -> returns the addon's exports table.
- *   void* get_release_addr() -> returns a pointer to parameterless mod_release. */
+ *   void* get_release_addr() -> returns a pointer to parameterless mod_release.
+ *
+ * The 7th slot was historically d3dversion but modern arcdps repurposed it as
+ * IMGUI_VERSION_NUMBER. id3dptr is always IDXGISwapChain* (DX11) now. */
 typedef arcdps_exports* (*mod_init_t)();
 typedef void            (*mod_release_t)();
 
@@ -79,5 +82,5 @@ typedef mod_init_t    (*get_init_addr_fn_t)(
     HMODULE  arcdll,
     void*    mallocfn,
     void*    freefn,
-    uint32_t d3dversion);
+    uint32_t imguiversion);
 typedef mod_release_t (*get_release_addr_fn_t)();
