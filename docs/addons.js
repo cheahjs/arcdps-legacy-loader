@@ -10,7 +10,7 @@ window.ADDONS = {
       language: "Rust",
       migration_status: "in_progress",
       prerelease_url: null,
-      notes: null,
+      notes: "Will continue to work without updates, except for character select/loading screen detection",
     },
     {
       name: "Boon Table",
@@ -94,8 +94,8 @@ window.ADDONS = {
       language: "C++",
       migration_status: "migrated",
       prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/569598387654230033/1500594904517181625",
-      notes: "<a href=\"https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log/pull/8\">In progress PR</a>",
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/569598387654230033/1500975979185832117",
+      notes: "",
     },
     {
       name: "Player List",
