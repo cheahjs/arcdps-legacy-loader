@@ -74,7 +74,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "migrated",
       prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/828295240309145600/1497622580218302464",
+      prerelease_discord_url: "https://discord.com/channels/456611641526845473/828295240309145600/1501540065497845841",
       notes: null,
     },
     {
