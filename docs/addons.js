@@ -134,5 +134,15 @@ window.ADDONS = {
       prerelease_discord_url: "https://discord.com/channels/456611641526845473/953659301162004591/1500140192680644788",
       notes: null,
     },
+    {
+      name: "SCT",
+      author: "jake-greygoose (fork)",
+      repo: "https://github.com/jake-greygoose/GW2-SCT",
+      language: "C++",
+      migration_status: "migrated",
+      prerelease_url: "https://github.com/jake-greygoose/GW2-SCT/releases/tag/2026.5.7.1269",
+      prerelease_discord_url: "",
+      notes: null,
+    },
   ],
 };
