@@ -72,8 +72,7 @@ window.ADDONS = {
       repo: "https://github.com/Krappa322/arcdps_healing_stats",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/828295240309145600/1501540065497845841",
+      prerelease_url: "https://github.com/Krappa322/arcdps_healing_stats/releases/tag/v2.18.1",
       notes: null,
     },
     {
