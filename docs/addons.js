@@ -118,8 +118,8 @@ window.ADDONS = {
       repo: "https://github.com/xvwyh/SquadRoles",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      notes: "Updated addon will be released when arcdps update is released",
+      prerelease_url: "https://github.com/xvwyh/SquadRoles/releases/tag/2026-05-07",
+      notes: null,
     },
     {
       name: "Unofficial Extras",
