@@ -1,4 +1,4 @@
-// Source of truth for the addon compatibility table.
+ll// Source of truth for the addon compatibility table.
 // migration_status: not_migrated | in_progress | migrated.
 // prerelease_discord_url can be used for Discord-hosted test builds.
 window.ADDONS = {
@@ -18,8 +18,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/718867761056579614/1500254499317485709",
+      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table/releases/tag/v3.0.1",
       notes: "",
     },
     {
@@ -83,8 +82,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/arcdps-killproof.me-plugin",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/788949526337421333/1500970018706428025",
+      prerelease_url: "https://github.com/knoxfighter/arcdps-killproof.me-plugin/releases/tag/v3.0.1",
       notes: null,
     },
     {
@@ -93,8 +91,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/569598387654230033/1500975979185832117",
+      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log/releases/tag/v3.0.1",
       notes: "",
     },
     {
