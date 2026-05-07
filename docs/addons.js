@@ -135,7 +135,7 @@ window.ADDONS = {
       repo: "https://github.com/jake-greygoose/GW2-SCT",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/jake-greygoose/GW2-SCT/releases/tag/2026.5.7.1269",
+      prerelease_url: "https://github.com/jake-greygoose/GW2-SCT/releases/tag/2026.5.7.1365",
       notes: null,
     },
   ],
