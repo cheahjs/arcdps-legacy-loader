@@ -37,7 +37,7 @@ window.ADDONS = {
       language: "C++",
       migration_status: "migrated",
       prerelease_url: "https://buildpad.gw2archive.eu/",
-      notes: ",
+      notes: "",
     },
     {
       name: "Chat Log",
