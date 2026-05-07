@@ -1,4 +1,4 @@
-ll// Source of truth for the addon compatibility table.
+// Source of truth for the addon compatibility table.
 // migration_status: not_migrated | in_progress | migrated.
 // prerelease_discord_url can be used for Discord-hosted test builds.
 window.ADDONS = {
@@ -36,8 +36,8 @@ window.ADDONS = {
       repo: "https://github.com/xvwyh/BuildPad",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      notes: "Updated addon will be released when arcdps update is released",
+      prerelease_url: "https://buildpad.gw2archive.eu/",
+      notes: ",
     },
     {
       name: "Chat Log",
@@ -127,8 +127,7 @@ window.ADDONS = {
       repo: "https://github.com/Krappa322/arcdps_unofficial_extras_releases",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: null,
-      prerelease_discord_url: "https://discord.com/channels/456611641526845473/953659301162004591/1500140192680644788",
+      prerelease_url: "https://github.com/Krappa322/arcdps_unofficial_extras_releases/releases/tag/v2.0.1",
       notes: null,
     },
     {
