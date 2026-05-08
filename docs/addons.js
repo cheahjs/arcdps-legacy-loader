@@ -8,9 +8,9 @@ window.ADDONS = {
       author: "greaka",
       repo: "https://github.com/blish-hud/arcdps-bhud",
       language: "Rust",
-      migration_status: "in_progress",
-      prerelease_url: null,
-      notes: "Will continue to work without updates, except for character select/loading screen detection",
+      migration_status: "migrated",
+      prerelease_url: "https://github.com/blish-hud/arcdps-bhud/releases/latest",
+      notes: "",
     },
     {
       name: "Boon Table",
