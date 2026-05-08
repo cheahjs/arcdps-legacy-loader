@@ -81,7 +81,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/arcdps-killproof.me-plugin",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/knoxfighter/arcdps-killproof.me-plugin/latest",
+      prerelease_url: "https://github.com/knoxfighter/arcdps-killproof.me-plugin/releases/latest",
       notes: null,
     },
     {
