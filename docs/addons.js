@@ -18,7 +18,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table/releases/tag/v3.0.1",
+      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Boon-Table/releases/latest",
       notes: "",
     },
     {
@@ -45,7 +45,7 @@ window.ADDONS = {
       repo: "https://github.com/cheahjs/arcdps-chat-log",
       language: "Rust",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/cheahjs/arcdps-chat-log/releases/tag/v0.7.1",
+      prerelease_url: "https://github.com/cheahjs/arcdps-chat-log/releases/latest",
       notes: null,
     },
     {
@@ -72,7 +72,7 @@ window.ADDONS = {
       repo: "https://github.com/Krappa322/arcdps_healing_stats",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/Krappa322/arcdps_healing_stats/releases/tag/v2.18.1",
+      prerelease_url: "https://github.com/Krappa322/arcdps_healing_stats/releases/latest",
       notes: null,
     },
     {
@@ -81,7 +81,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/arcdps-killproof.me-plugin",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/knoxfighter/arcdps-killproof.me-plugin/releases/tag/v3.0.1",
+      prerelease_url: "https://github.com/knoxfighter/arcdps-killproof.me-plugin/latest",
       notes: null,
     },
     {
@@ -90,7 +90,7 @@ window.ADDONS = {
       repo: "https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log/releases/tag/v3.0.1",
+      prerelease_url: "https://github.com/knoxfighter/GW2-ArcDPS-Mechanics-Log/releases/latest",
       notes: "",
     },
     {
@@ -108,7 +108,7 @@ window.ADDONS = {
       repo: "https://github.com/cheahjs/arcdps-squad-ready-plugin",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/cheahjs/arcdps-squad-ready-plugin/releases/tag/v0.8.1",
+      prerelease_url: "https://github.com/cheahjs/arcdps-squad-ready-plugin/releases/latest",
       notes: null,
     },
     {
@@ -117,7 +117,7 @@ window.ADDONS = {
       repo: "https://github.com/xvwyh/SquadRoles",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/xvwyh/SquadRoles/releases/tag/2026-05-07",
+      prerelease_url: "https://github.com/xvwyh/SquadRoles/releases/latest",
       notes: null,
     },
     {
@@ -126,7 +126,7 @@ window.ADDONS = {
       repo: "https://github.com/Krappa322/arcdps_unofficial_extras_releases",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/Krappa322/arcdps_unofficial_extras_releases/releases/tag/v2.0.1",
+      prerelease_url: "https://github.com/Krappa322/arcdps_unofficial_extras_releases/releases/latest",
       notes: null,
     },
     {
@@ -135,7 +135,7 @@ window.ADDONS = {
       repo: "https://github.com/jake-greygoose/GW2-SCT",
       language: "C++",
       migration_status: "migrated",
-      prerelease_url: "https://github.com/jake-greygoose/GW2-SCT/releases/tag/2026.5.7.1365",
+      prerelease_url: "https://github.com/jake-greygoose/GW2-SCT/releases/latest",
       notes: null,
     },
   ],
