@@ -98,8 +98,8 @@ window.ADDONS = {
       author: "Calcoph",
       repo: "https://github.com/Calcoph/gw2-player-list",
       language: "Rust",
-      migration_status: "not_migrated",
-      prerelease_url: null,
+      migration_status: "migrated",
+      prerelease_url: "https://github.com/Calcoph/gw2-player-list/releases/latest",
       notes: null,
     },
     {
