@@ -166,6 +166,9 @@ extern "C" int         ArcStyleReader_LayoutKnown(void)      { return g_layout_k
 
 extern "C" void ArcStyleSnapshot_Init(ArcStyleSnapshot* s) {
     if (!s) return;
+    s->FontSizeBase  = ARC_STYLE_UNSET;
+    s->FontScaleMain = ARC_STYLE_UNSET;
+    s->FontScaleDpi  = ARC_STYLE_UNSET;
     float* p     = &s->Alpha;
     float* p_end = &s->CircleTessellationMaxError + 1;
     for (float* it = p; it != p_end; ++it) *it = ARC_STYLE_UNSET;
@@ -223,6 +226,9 @@ extern "C" int ArcStyleReader_Capture(void* arc_imgui_ctx, ArcStyleSnapshot* out
         base + ExpectedStyleOffset() + g_layout_delta);
     if (!LooksSane(s)) return 0;
 
+    out->FontSizeBase               = s.FontSizeBase;
+    out->FontScaleMain              = s.FontScaleMain;
+    out->FontScaleDpi               = s.FontScaleDpi;
     out->Alpha                      = s.Alpha;
     CopyVec2(out->WindowPadding,       s.WindowPadding);
     out->WindowRounding             = s.WindowRounding;

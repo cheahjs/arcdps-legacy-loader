@@ -4,6 +4,7 @@
 #include "arc_style_apply.h"
 #include "arc_windows_snapshot.h"
 #include "arc_windows_mirror.h"
+#include "style_persist.h"
 #include "config/config.h"
 #include "logging/log.h"
 #include "proxy/arcdps_proxy.h"
@@ -102,6 +103,10 @@ void* Init(void* id3dptr) {
      * crash typically surfaces later as a null deref deep inside
      * nvwgf2umx.dll worker threads, with no addon frames on the stack. */
 
+    /* Register the [Style][Default] handler before LoadIniSettingsFromDisk so
+     * any persisted style is applied during the load pass below. */
+    RegisterStyleSettingsHandler();
+
     /* Settle SettingsLoaded / SettingsWindows NOW, before background legacy
      * addon mod_init calls can hit NewFrame's first-frame UpdateSettings path:
      *     if (!SettingsLoaded) { IM_ASSERT(SettingsWindows.empty()); ... }
@@ -113,6 +118,11 @@ void* Init(void* id3dptr) {
      * to cover the fresh-install case. */
     ImGui::LoadIniSettingsFromDisk(g_ini_path.c_str());
     g_ctx->SettingsLoaded = true;
+
+    /* If the ini carried a saved style, treat the deferred arcdps capture
+     * as already done so the persisted style isn't overwritten on the first
+     * frame. The user can still hit "Re-capture" to refresh from arcdps. */
+    if (StyleWasLoadedFromIni()) g_style_captured = true;
 
     return g_ctx;
 }
@@ -199,6 +209,11 @@ void NewFrame() {
             g_dx11_up = true;
         }
     }
+
+    /* Pick up style edits from the previous frame's UI render (Appearance
+     * tab's ShowStyleEditor, addon-driven changes, deferred arcdps capture)
+     * and mark imgui's ini dirty so the auto-save timer flushes them. */
+    DetectStyleEditsForAutoSave();
 
     if (g_dx11_up) ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -330,8 +345,12 @@ bool RefreshStyle(bool follow) {
     if (!g_ctx) return false;
     ImGui::SetCurrentContext(g_ctx);
     /* Reset to 1.80 defaults first so turning the toggle off actually
-     * reverts any colors we previously painted over. */
+     * reverts any colors we previously painted over. StyleColorsDark
+     * doesn't touch io.FontGlobalScale (that lives outside ImGuiStyle),
+     * so reset that explicitly — otherwise an arcdps-derived font scale
+     * would persist after the user disables the follow toggle. */
     ImGui::StyleColorsDark();
+    ImGui::GetIO().FontGlobalScale = 1.0f;
     if (!follow) {
         g_style_captured = false;  /* re-arm first-frame capture on toggle-on */
         return false;
