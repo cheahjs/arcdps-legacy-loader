@@ -4,6 +4,7 @@
 #include "arc_style_apply.h"
 #include "arc_windows_snapshot.h"
 #include "arc_windows_mirror.h"
+#include "style_persist.h"
 #include "config/config.h"
 #include "logging/log.h"
 #include "proxy/arcdps_proxy.h"
@@ -102,6 +103,10 @@ void* Init(void* id3dptr) {
      * crash typically surfaces later as a null deref deep inside
      * nvwgf2umx.dll worker threads, with no addon frames on the stack. */
 
+    /* Register the [Style][Default] handler before LoadIniSettingsFromDisk so
+     * any persisted style is applied during the load pass below. */
+    RegisterStyleSettingsHandler();
+
     /* Settle SettingsLoaded / SettingsWindows NOW, before background legacy
      * addon mod_init calls can hit NewFrame's first-frame UpdateSettings path:
      *     if (!SettingsLoaded) { IM_ASSERT(SettingsWindows.empty()); ... }
@@ -113,6 +118,14 @@ void* Init(void* id3dptr) {
      * to cover the fresh-install case. */
     ImGui::LoadIniSettingsFromDisk(g_ini_path.c_str());
     g_ctx->SettingsLoaded = true;
+
+    /* g_style_captured intentionally stays false here: when match-arcdps is
+     * off, the deferred-capture loop's own StyleFollowsArcdps() guard keeps
+     * it dormant; when match-arcdps is on, we want it to run (and overwrite
+     * any ini-loaded style) so arcdps stays the source of truth. Forcing
+     * captured=true at Init based on ini contents would also wedge the
+     * retry loop if the user later toggled match on and the first
+     * RefreshStyle(true) failed — capture would be permanently skipped. */
 
     return g_ctx;
 }
@@ -199,6 +212,13 @@ void NewFrame() {
             g_dx11_up = true;
         }
     }
+
+    /* Pick up style edits from the previous frame's UI render (Appearance
+     * tab's ShowStyleEditor, addon-driven changes, deferred arcdps capture).
+     * The match-arcdps state controls whether those edits are written back
+     * into the persisted user style: only when match is off does the live
+     * style represent the user's customizations. */
+    DetectStyleEditsForAutoSave(Config::StyleFollowsArcdps());
 
     if (g_dx11_up) ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -329,13 +349,24 @@ std::recursive_mutex& Mutex() { return g_mutex; }
 bool RefreshStyle(bool follow) {
     if (!g_ctx) return false;
     ImGui::SetCurrentContext(g_ctx);
-    /* Reset to 1.80 defaults first so turning the toggle off actually
-     * reverts any colors we previously painted over. */
-    ImGui::StyleColorsDark();
+
     if (!follow) {
+        /* Restore the user's saved style instead of resetting to dark — the
+         * dark reset would stomp on any customizations the user had made
+         * while match-arcdps was off (or earlier and persisted to ini). */
+        ApplyUserStyleToLive();
         g_style_captured = false;  /* re-arm first-frame capture on toggle-on */
         return false;
     }
+
+    /* Reset to 1.80 defaults first so any field the arcdps capture doesn't
+     * overwrite (or doesn't recognize) lands on a known baseline rather
+     * than whatever the previous user style had there. StyleColorsDark
+     * doesn't touch io.FontGlobalScale (lives outside ImGuiStyle); reset
+     * explicitly so a stale user-style font scale doesn't survive the
+     * recapture. ArcStyle may then overwrite it from arcdps's io. */
+    ImGui::StyleColorsDark();
+    ImGui::GetIO().FontGlobalScale = 1.0f;
 
     ArcStyleSnapshot snap;
     ArcStyleSnapshot_Init(&snap);

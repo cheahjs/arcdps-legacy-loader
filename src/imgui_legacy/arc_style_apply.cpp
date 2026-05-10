@@ -30,6 +30,22 @@ namespace {
 namespace ImguiLegacy {
 
 void ApplyArcStyle(const ArcStyleSnapshot& s, ImGuiStyle& d) {
+    /* 1.92 splits font sizing across three multiplicative factors
+     * (FontSizeBase * FontScaleMain * FontScaleDpi). 1.80 has no field
+     * equivalent — its only post-build knob is io.FontGlobalScale,
+     * applied to whatever font/size is in the atlas. We rebuild the
+     * scale ratio by dividing arcdps's effective px size by the size
+     * our default font was actually built at. */
+    if (IsSet(s.FontSizeBase) && IsSet(s.FontScaleMain) && IsSet(s.FontScaleDpi)) {
+        ImGuiIO& io = ImGui::GetIO();
+        float our_size = (io.Fonts && io.Fonts->Fonts.Size > 0 && io.Fonts->Fonts[0])
+                       ? io.Fonts->Fonts[0]->FontSize : 13.0f;
+        if (our_size > 0.0f) {
+            float arc_effective = s.FontSizeBase * s.FontScaleMain * s.FontScaleDpi;
+            io.FontGlobalScale = arc_effective / our_size;
+        }
+    }
+
     MaybeAssign(d.Alpha,                s.Alpha);
     MaybeAssign(d.WindowPadding,        s.WindowPadding);
     MaybeAssign(d.WindowRounding,       s.WindowRounding);

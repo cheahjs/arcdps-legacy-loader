@@ -22,6 +22,14 @@ typedef struct ArcStyleColor {
 } ArcStyleColor;
 
 typedef struct ArcStyleSnapshot {
+    /* Font sizing knobs new in 1.92 (no equivalent in 1.80's ImGuiStyle).
+     * The applier folds these into io.FontGlobalScale so legacy text
+     * renders at roughly the same on-screen size as arcdps's, given that
+     * 1.80 can only post-rasterization-scale its single atlas. */
+    float FontSizeBase;
+    float FontScaleMain;
+    float FontScaleDpi;
+
     /* Scalars / vecs — names mirror ImGuiStyle members that exist in both
      * 1.80 and 1.92. Fields the reader can't find are left at the sentinel
      * value below and skipped by the applier. */

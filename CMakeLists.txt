@@ -79,6 +79,7 @@ add_library(${TARGET_NAME} SHARED
     src/imgui_legacy/context.cpp
     src/imgui_legacy/arc_style_apply.cpp
     src/imgui_legacy/arc_windows_mirror.cpp
+    src/imgui_legacy/style_persist.cpp
     src/proxy/arcdps_proxy.cpp
     src/logging/log.cpp
     src/ui/settings_window.cpp
