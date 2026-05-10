@@ -67,7 +67,14 @@ void Msg(const char* fmt, ...) {
     WriteFile(buf);
 
     Resolve();
-    if (g_e3) g_e3(buf);
+    if (g_e3) {
+        /* Prefix arc-bound lines so they're identifiable in arcdps's shared
+         * log alongside other addons. The local file is already named for us
+         * so it doesn't need the prefix. */
+        char arcbuf[sizeof(buf) + 16];
+        snprintf(arcbuf, sizeof(arcbuf), "legacy_loader: %s", buf);
+        g_e3(arcbuf);
+    }
 }
 
 }
