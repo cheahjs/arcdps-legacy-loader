@@ -113,3 +113,48 @@ else()
     # Strip the "lib" prefix mingw adds to shared libraries by default.
     set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
 endif()
+
+# ----------------------------------------------------------------------------
+# Optional debug harness: a separate arcdps addon DLL that drives the loader's
+# init/release cycle via arcdps's addextension2/removeextension2 to reproduce
+# teardown crashes. Not built by default; build with -DARCDPS_LL_HARNESS=ON.
+# ----------------------------------------------------------------------------
+option(ARCDPS_LL_HARNESS "Build the crash-reload harness addon" OFF)
+
+if(ARCDPS_LL_HARNESS)
+    # Full imgui 1.92.7 static lib for the harness. Distinct from the
+    # imgui_1927 OBJECT lib above (which compiles two reader translation
+    # units against the 1.92.7 headers without pulling in imgui's own
+    # sources). The harness needs the real Begin/Text/etc. implementations,
+    # but lives in its own DLL so there's no ODR collision with the
+    # loader's imgui_180.
+    add_library(imgui_1927_full STATIC
+        ${imgui_1927_SOURCE_DIR}/imgui.cpp
+        ${imgui_1927_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_1927_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_1927_SOURCE_DIR}/imgui_widgets.cpp
+    )
+    target_include_directories(imgui_1927_full PUBLIC ${imgui_1927_SOURCE_DIR})
+
+    add_library(arcdps_legacy_loader_harness SHARED
+        harness/src/main.cpp
+        harness/def/arcdps_legacy_loader_harness.def
+    )
+    target_link_libraries(arcdps_legacy_loader_harness PRIVATE imgui_1927_full)
+    target_include_directories(arcdps_legacy_loader_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(arcdps_legacy_loader_harness PROPERTIES
+        OUTPUT_NAME "arcdps_legacy_loader_harness"
+        PREFIX ""
+        SUFFIX ".dll"
+    )
+
+    if(MSVC)
+        target_compile_options(arcdps_legacy_loader_harness PRIVATE /W4 /permissive-)
+        target_compile_options(imgui_1927_full              PRIVATE /W3)
+    else()
+        target_compile_options(arcdps_legacy_loader_harness PRIVATE
+            -Wall -Wextra -Wno-unknown-pragmas)
+    endif()
+endif()

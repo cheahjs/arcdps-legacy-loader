@@ -27,7 +27,9 @@ namespace {
     ComPtr<ID3D11DeviceContext> g_immediate;
     ComPtr<IDXGISwapChain>      g_swap;
     HWND                  g_hwnd       = nullptr;
-    bool                  g_backend_up = false;
+    bool                  g_win32_up   = false;
+    bool                  g_dx11_up    = false;
+    bool                  g_dx11_failed = false;
     std::recursive_mutex  g_mutex;
     /* Backing storage for ImGuiIO::IniFilename — imgui just stores the
      * pointer, so this must outlive the context. */
@@ -86,18 +88,19 @@ void* Init(void* id3dptr) {
      * all-zero palette that renders everything transparent. */
     ImGui::StyleColorsDark();
 
-    if (!ImGui_ImplWin32_Init(g_hwnd) ||
-        !ImGui_ImplDX11_Init(g_device.Get(), g_immediate.Get())) {
-        Log::Msg("ImguiLegacy: backend init failed");
+    if (!ImGui_ImplWin32_Init(g_hwnd)) {
+        Log::Msg("ImguiLegacy: win32 backend init failed");
         Shutdown(); return nullptr;
     }
-    /* Force shader/font creation now so a D3DCompile failure surfaces here
-     * rather than silently no-op'ing every RenderDrawData. */
-    if (!ImGui_ImplDX11_CreateDeviceObjects()) {
-        Log::Msg("ImguiLegacy: ImGui_ImplDX11_CreateDeviceObjects failed — "
-                 "legacy render path will be dark");
-    }
-    g_backend_up = true;
+    g_win32_up = true;
+
+    /* DX11 backend init is deferred to the first NewFrame on the render
+     * thread. ImGui_ImplDX11_Init + CreateDeviceObjects touch the immediate
+     * context (font atlas upload, state-block setup); doing that from
+     * arcdps's mod_init thread races with GW2's render thread on the same
+     * ID3D11DeviceContext and corrupts the driver's command buffer. The
+     * crash typically surfaces later as a null deref deep inside
+     * nvwgf2umx.dll worker threads, with no addon frames on the stack. */
 
     /* Settle SettingsLoaded / SettingsWindows NOW, before background legacy
      * addon mod_init calls can hit NewFrame's first-frame UpdateSettings path:
@@ -145,11 +148,15 @@ void Shutdown() {
      * path) don't leave dangling pointers behind. */
     SaveAndDetachFromAddons();
 
-    if (g_backend_up) {
+    if (g_dx11_up) {
         ImGui_ImplDX11_Shutdown();
-        ImGui_ImplWin32_Shutdown();
-        g_backend_up = false;
+        g_dx11_up = false;
     }
+    if (g_win32_up) {
+        ImGui_ImplWin32_Shutdown();
+        g_win32_up = false;
+    }
+    g_dx11_failed = false;
     /* Deliberately skip ImGui::DestroyContext. It runs ImGui::Shutdown which
      * walks g.Windows (and a dozen other ImVectors) and IM_FREEs each entry
      * through arcdps's freefn. Legacy addons have already been FreeLibrary'd
@@ -174,7 +181,26 @@ void Shutdown() {
 void NewFrame() {
     if (!g_ctx) return;
     ImGui::SetCurrentContext(g_ctx);
-    ImGui_ImplDX11_NewFrame();
+
+    /* First-frame DX11 backend bring-up. Runs on the render thread (this is
+     * arcdps's imgui callback) so font atlas upload + shader/state creation
+     * have exclusive use of the immediate context. */
+    if (!g_dx11_up && !g_dx11_failed) {
+        if (!ImGui_ImplDX11_Init(g_device.Get(), g_immediate.Get())) {
+            Log::Msg("ImguiLegacy: ImGui_ImplDX11_Init failed");
+            g_dx11_failed = true;
+        } else if (!ImGui_ImplDX11_CreateDeviceObjects()) {
+            Log::Msg("ImguiLegacy: ImGui_ImplDX11_CreateDeviceObjects failed "
+                     "— legacy GPU output disabled (addon imgui calls still "
+                     "run on CPU, just produce no pixels)");
+            ImGui_ImplDX11_Shutdown();
+            g_dx11_failed = true;
+        } else {
+            g_dx11_up = true;
+        }
+    }
+
+    if (g_dx11_up) ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
 
     /* imgui 1.80's impl_win32 skips the GetCursorPos update unless the game
@@ -226,7 +252,14 @@ void NewFrame() {
 void EndFrameAndRender() {
     if (!g_ctx) return;
     ImGui::SetCurrentContext(g_ctx);
-    ImGui::Render();
+    ImGui::Render();  /* must pair with NewFrame even if we skip the GPU work */
+    /* When DX11 is down (deferred init pending, or permanent failure) we
+     * still pay for NewFrame + addon Begin/End + Render every frame. We
+     * can't skip the NewFrame body wholesale because legacy addons call
+     * ImGui::Begin/Text/etc. unconditionally between our NewFrame and
+     * here — bypassing NewFrame would assert inside their first imgui
+     * call. The only thing we elide is the GPU bind + draw below. */
+    if (!g_dx11_up) return;
     auto* dd = ImGui::GetDrawData();
 
     /* arcdps doesn't bind the backbuffer RTV before calling our imgui cb,
