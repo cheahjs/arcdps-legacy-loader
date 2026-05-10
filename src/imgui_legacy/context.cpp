@@ -191,7 +191,8 @@ void NewFrame() {
             g_dx11_failed = true;
         } else if (!ImGui_ImplDX11_CreateDeviceObjects()) {
             Log::Msg("ImguiLegacy: ImGui_ImplDX11_CreateDeviceObjects failed "
-                     "— legacy render path disabled");
+                     "— legacy GPU output disabled (addon imgui calls still "
+                     "run on CPU, just produce no pixels)");
             ImGui_ImplDX11_Shutdown();
             g_dx11_failed = true;
         } else {
@@ -252,6 +253,12 @@ void EndFrameAndRender() {
     if (!g_ctx) return;
     ImGui::SetCurrentContext(g_ctx);
     ImGui::Render();  /* must pair with NewFrame even if we skip the GPU work */
+    /* When DX11 is down (deferred init pending, or permanent failure) we
+     * still pay for NewFrame + addon Begin/End + Render every frame. We
+     * can't skip the NewFrame body wholesale because legacy addons call
+     * ImGui::Begin/Text/etc. unconditionally between our NewFrame and
+     * here — bypassing NewFrame would assert inside their first imgui
+     * call. The only thing we elide is the GPU bind + draw below. */
     if (!g_dx11_up) return;
     auto* dd = ImGui::GetDrawData();
 
