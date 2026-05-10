@@ -60,7 +60,22 @@ namespace {
 
         void* legacy_ctx = ImguiLegacy::Init(h.id3dptr);
         if (!legacy_ctx) return &g_exports;
-        AddonManager::LoadAllAsync(legacy_ctx);
+
+        /* Harness escape hatch: when arcdps_legacy_loader_harness.dll is
+         * driving reload cycles to reproduce teardown crashes, it sets this
+         * env var so we skip the disk scan and exercise only the loader's
+         * own init/release path. Quick, small read — fixed buffer is plenty
+         * since the only value we care about is "1". */
+        wchar_t skip_buf[4] = {};
+        DWORD skip_n = GetEnvironmentVariableW(L"ARCDPS_LL_HARNESS_SKIP_ADDONS",
+                                               skip_buf, _countof(skip_buf));
+        const bool harness_skip = (skip_n > 0 && skip_n < _countof(skip_buf)
+                                   && skip_buf[0] == L'1');
+        if (harness_skip) {
+            Log::Msg("harness skip-addons env set, not scanning legacy dir");
+        } else {
+            AddonManager::LoadAllAsync(legacy_ctx);
+        }
         return &g_exports;
     }
 
