@@ -214,9 +214,11 @@ void NewFrame() {
     }
 
     /* Pick up style edits from the previous frame's UI render (Appearance
-     * tab's ShowStyleEditor, addon-driven changes, deferred arcdps capture)
-     * and mark imgui's ini dirty so the auto-save timer flushes them. */
-    DetectStyleEditsForAutoSave();
+     * tab's ShowStyleEditor, addon-driven changes, deferred arcdps capture).
+     * The match-arcdps state controls whether those edits are written back
+     * into the persisted user style: only when match is off does the live
+     * style represent the user's customizations. */
+    DetectStyleEditsForAutoSave(Config::StyleFollowsArcdps());
 
     if (g_dx11_up) ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -347,17 +349,24 @@ std::recursive_mutex& Mutex() { return g_mutex; }
 bool RefreshStyle(bool follow) {
     if (!g_ctx) return false;
     ImGui::SetCurrentContext(g_ctx);
-    /* Reset to 1.80 defaults first so turning the toggle off actually
-     * reverts any colors we previously painted over. StyleColorsDark
-     * doesn't touch io.FontGlobalScale (that lives outside ImGuiStyle),
-     * so reset that explicitly — otherwise an arcdps-derived font scale
-     * would persist after the user disables the follow toggle. */
-    ImGui::StyleColorsDark();
-    ImGui::GetIO().FontGlobalScale = 1.0f;
+
     if (!follow) {
+        /* Restore the user's saved style instead of resetting to dark — the
+         * dark reset would stomp on any customizations the user had made
+         * while match-arcdps was off (or earlier and persisted to ini). */
+        ApplyUserStyleToLive();
         g_style_captured = false;  /* re-arm first-frame capture on toggle-on */
         return false;
     }
+
+    /* Reset to 1.80 defaults first so any field the arcdps capture doesn't
+     * overwrite (or doesn't recognize) lands on a known baseline rather
+     * than whatever the previous user style had there. StyleColorsDark
+     * doesn't touch io.FontGlobalScale (lives outside ImGuiStyle); reset
+     * explicitly so a stale user-style font scale doesn't survive the
+     * recapture. ArcStyle may then overwrite it from arcdps's io. */
+    ImGui::StyleColorsDark();
+    ImGui::GetIO().FontGlobalScale = 1.0f;
 
     ArcStyleSnapshot snap;
     ArcStyleSnapshot_Init(&snap);

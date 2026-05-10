@@ -136,8 +136,13 @@ void Draw() {
                 Config::Save();
                 ImguiLegacy::RefreshStyle(follow);
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Re-capture")) ImguiLegacy::RefreshStyle(follow);
+            /* Re-capture only makes sense when we're actively following arcdps —
+             * when match is off, the live style is the user's saved style and
+             * there's nothing arcdps-side to recapture. */
+            if (follow) {
+                ImGui::SameLine();
+                if (ImGui::Button("Re-capture")) ImguiLegacy::RefreshStyle(true);
+            }
             ImGui::TextUnformatted("Copies arcdps's ImGui theme onto the legacy context.");
 
             bool& mirror = Config::MirrorArcdpsWindows();
