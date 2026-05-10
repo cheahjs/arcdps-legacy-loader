@@ -9,7 +9,6 @@
 #include <unordered_map>
 
 namespace {
-    bool       g_loaded_from_ini = false;
     bool       g_snapshot_init   = false;
     ImGuiStyle g_snapshot{};
     /* IO state we also persist (ShowStyleEditor's Fonts tab edits this, not
@@ -88,10 +87,6 @@ namespace {
         return line + n + 1;
     }
 
-    void ClearAllFn(ImGuiContext*, ImGuiSettingsHandler*) {
-        g_loaded_from_ini = false;
-    }
-
     void* ReadOpenFn(ImGuiContext*, ImGuiSettingsHandler*, const char* name) {
         /* Single-bucket section; ignore any other names that might appear. */
         return std::strcmp(name, "Default") == 0 ? (void*)1 : nullptr;
@@ -102,35 +97,35 @@ namespace {
 
         if (auto v = MatchKey(line, "FontGlobalScale")) {
             float x;
-            if (std::sscanf(v, "%f", &x) == 1) { ImGui::GetIO().FontGlobalScale = x; g_loaded_from_ini = true; }
+            if (std::sscanf(v, "%f", &x) == 1) ImGui::GetIO().FontGlobalScale = x;
             return;
         }
 
         for (auto& f : kFloats) {
             if (auto v = MatchKey(line, f.name)) {
                 float x;
-                if (std::sscanf(v, "%f", &x) == 1) { s.*f.ptr = x; g_loaded_from_ini = true; }
+                if (std::sscanf(v, "%f", &x) == 1) s.*f.ptr = x;
                 return;
             }
         }
         for (auto& f : kVecs) {
             if (auto v = MatchKey(line, f.name)) {
                 float x, y;
-                if (std::sscanf(v, "%f,%f", &x, &y) == 2) { s.*f.ptr = ImVec2(x, y); g_loaded_from_ini = true; }
+                if (std::sscanf(v, "%f,%f", &x, &y) == 2) s.*f.ptr = ImVec2(x, y);
                 return;
             }
         }
         for (auto& f : kBools) {
             if (auto v = MatchKey(line, f.name)) {
                 int x;
-                if (std::sscanf(v, "%d", &x) == 1) { s.*f.ptr = (x != 0); g_loaded_from_ini = true; }
+                if (std::sscanf(v, "%d", &x) == 1) s.*f.ptr = (x != 0);
                 return;
             }
         }
         for (auto& f : kDirs) {
             if (auto v = MatchKey(line, f.name)) {
                 int x;
-                if (std::sscanf(v, "%d", &x) == 1) { s.*f.ptr = (ImGuiDir)x; g_loaded_from_ini = true; }
+                if (std::sscanf(v, "%d", &x) == 1) s.*f.ptr = (ImGuiDir)x;
                 return;
             }
         }
@@ -141,10 +136,8 @@ namespace {
             if (std::sscanf(line, "Color.%63[^=]=%f,%f,%f,%f", cname, &r, &g, &b, &a) == 5) {
                 const auto& tbl = ColorNameTable();
                 auto it = tbl.find(cname);
-                if (it != tbl.end()) {
+                if (it != tbl.end())
                     s.Colors[it->second] = ImVec4(r, g, b, a);
-                    g_loaded_from_ini = true;
-                }
             }
         }
     }
@@ -170,20 +163,21 @@ namespace ImguiLegacy {
 
 void RegisterStyleSettingsHandler() {
     /* 1.80 doesn't expose ImGui::AddSettingsHandler — push into the context
-     * vector directly, after a duplicate guard. */
+     * vector directly, after a duplicate guard. Brace-init zeroes the
+     * optional callbacks (ReadInitFn, ApplyAllFn) and UserData; imgui
+     * iterates them with null guards but only after they exist as raw
+     * memory in the ImVector slot, so leaving them indeterminate would
+     * be a footgun. */
     if (ImGui::FindSettingsHandler("Style")) return;
 
-    ImGuiSettingsHandler h;
+    ImGuiSettingsHandler h{};
     h.TypeName   = "Style";
     h.TypeHash   = ImHashStr("Style");
-    h.ClearAllFn = ClearAllFn;
     h.ReadOpenFn = ReadOpenFn;
     h.ReadLineFn = ReadLineFn;
     h.WriteAllFn = WriteAllFn;
     GImGui->SettingsHandlers.push_back(h);
 }
-
-bool StyleWasLoadedFromIni() { return g_loaded_from_ini; }
 
 void DetectStyleEditsForAutoSave() {
     const ImGuiStyle& s   = ImGui::GetStyle();

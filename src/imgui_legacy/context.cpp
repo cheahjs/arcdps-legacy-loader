@@ -119,13 +119,13 @@ void* Init(void* id3dptr) {
     ImGui::LoadIniSettingsFromDisk(g_ini_path.c_str());
     g_ctx->SettingsLoaded = true;
 
-    /* If the ini carried a saved style AND the user isn't tracking arcdps,
-     * treat the deferred arcdps capture as already done so their persisted
-     * style isn't overwritten on the first frame. When "Match arcdps style"
-     * is on, arcdps remains the source of truth — we let the deferred
-     * capture run and overwrite the ini-loaded values. */
-    if (StyleWasLoadedFromIni() && !Config::StyleFollowsArcdps())
-        g_style_captured = true;
+    /* g_style_captured intentionally stays false here: when match-arcdps is
+     * off, the deferred-capture loop's own StyleFollowsArcdps() guard keeps
+     * it dormant; when match-arcdps is on, we want it to run (and overwrite
+     * any ini-loaded style) so arcdps stays the source of truth. Forcing
+     * captured=true at Init based on ini contents would also wedge the
+     * retry loop if the user later toggled match on and the first
+     * RefreshStyle(true) failed — capture would be permanently skipped. */
 
     return g_ctx;
 }

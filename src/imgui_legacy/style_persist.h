@@ -15,11 +15,6 @@ namespace ImguiLegacy {
      * handler picks up any saved style on the first load pass. */
     void RegisterStyleSettingsHandler();
 
-    /* True if the most recent LoadIniSettingsFromDisk pass populated at
-     * least one style field via the handler. Caller uses this to skip the
-     * deferred arcdps style capture so the persisted style wins on launch. */
-    bool StyleWasLoadedFromIni();
-
     /* Diffs ImGui::GetStyle() against a cached snapshot. On change updates
      * the snapshot and calls MarkIniSettingsDirty. Cheap (one memcmp);
      * intended to run once per frame at the start of NewFrame so edits
