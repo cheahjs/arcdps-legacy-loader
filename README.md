@@ -34,6 +34,12 @@ Legacy addons that anchor their own windows against arcdps windows (e.g. Boon Ta
 This only works for legacy addons anchoring against arcdps windows, and will not work for newer addons to anchor against legacy windows.
 Disable in the loader settings UI to reduce performance overhead.
 
+### Custom font
+
+Drop a `.ttf` at `<gw2-root>/addons/arcdps/legacy/font.ttf` to use it as the legacy context's font.
+Pixel size is configurable from the loader settings UI (`font_size` in `loader.ini`).
+The font atlas is built once at startup, so font swaps and size changes only take effect after restarting GW2.
+
 ## Building
 
 ### Native Windows (MSVC)
