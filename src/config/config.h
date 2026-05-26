@@ -31,4 +31,11 @@ namespace Config {
      * own windows against arcdps windows (e.g. Boon Table's relative
      * positioning) can still resolve them via ImGui::FindWindowByID. */
     bool& MirrorArcdpsWindows();
+
+    /* Pixel size at which a user-supplied font.ttf (dropped at
+     * <gw2-root>/addons/arcdps/legacy/font.ttf) is loaded. Ignored if
+     * the file isn't present — the loader then falls back to imgui's
+     * built-in ProggyClean. Live edits don't rebuild the atlas; the
+     * value is read once at context init. */
+    float& FontSize();
 }

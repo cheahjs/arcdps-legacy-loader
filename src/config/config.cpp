@@ -11,6 +11,7 @@ namespace {
     Config::Hotkey g_toggle;
     bool           g_style_follows_arcdps = true;
     bool           g_mirror_arcdps_windows = true;
+    float          g_font_size = 13.0f;
 
     fs::path ConfigPath() {
         wchar_t buf[MAX_PATH];
@@ -33,6 +34,8 @@ void Load() {
         if (sscanf(line, "toggle_alt=%d", &v)   == 1) g_toggle.alt   = v != 0;
         if (sscanf(line, "style_follows_arcdps=%d", &v) == 1) g_style_follows_arcdps = v != 0;
         if (sscanf(line, "mirror_arcdps_windows=%d", &v) == 1) g_mirror_arcdps_windows = v != 0;
+        float fv;
+        if (sscanf(line, "font_size=%f", &fv) == 1 && fv >= 4.0f && fv <= 96.0f) g_font_size = fv;
     }
     fclose(f);
 }
@@ -52,12 +55,14 @@ void Save() {
     fprintf(f, "toggle_alt=%d\n",   g_toggle.alt   ? 1 : 0);
     fprintf(f, "style_follows_arcdps=%d\n", g_style_follows_arcdps ? 1 : 0);
     fprintf(f, "mirror_arcdps_windows=%d\n", g_mirror_arcdps_windows ? 1 : 0);
+    fprintf(f, "font_size=%g\n", g_font_size);
     fclose(f);
 }
 
 Hotkey& ToggleKey()           { return g_toggle; }
 bool&   StyleFollowsArcdps()  { return g_style_follows_arcdps; }
 bool&   MirrorArcdpsWindows() { return g_mirror_arcdps_windows; }
+float&  FontSize()            { return g_font_size; }
 
 void FormatHotkey(const Hotkey& h, char* buf, size_t len) {
     char key[32];

@@ -83,6 +83,24 @@ void* Init(void* id3dptr) {
     g_ini_path = (exe_dir / "addons" / "arcdps" / "legacy" / "imgui.ini").string();
     ImGui::GetIO().IniFilename = g_ini_path.c_str();
 
+    /* Optional user font: drop a .ttf at addons/arcdps/legacy/font.ttf and
+     * the loader picks it up for the legacy context. Must register before
+     * the DX11 backend uploads the atlas (first NewFrame on render thread),
+     * which Init's deferred-init contract already guarantees. */
+    fs::path font_path = exe_dir / "addons" / "arcdps" / "legacy" / "font.ttf";
+    std::error_code font_ec;
+    if (fs::exists(font_path, font_ec)) {
+        const float size = Config::FontSize();
+        std::string font_str = font_path.string();
+        if (ImGui::GetIO().Fonts->AddFontFromFileTTF(font_str.c_str(), size)) {
+            Log::Msg("ImguiLegacy: loaded user font %s @ %.1fpx",
+                     font_str.c_str(), size);
+        } else {
+            Log::Msg("ImguiLegacy: AddFontFromFileTTF failed for %s — "
+                     "falling back to default", font_str.c_str());
+        }
+    }
+
     /* Style defaults to 1.80 dark. The actual arcdps style port is
      * deferred to the first NewFrame — at Init time arcdps has often not
      * populated its own ImGuiStyle yet, and reading it would give us an

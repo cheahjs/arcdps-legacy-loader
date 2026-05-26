@@ -149,6 +149,13 @@ void Draw() {
             if (ImGui::Checkbox("Mirror arcdps windows", &mirror)) Config::Save();
             ImGui::TextUnformatted("Lets legacy addons anchor their UI against arcdps windows.");
 
+            ImGui::Separator();
+            float& font_size = Config::FontSize();
+            if (ImGui::DragFloat("Font size", &font_size, 0.5f, 4.0f, 96.0f, "%.1f px"))
+                Config::Save();
+            ImGui::TextUnformatted("Drop a .ttf at addons/arcdps/legacy/font.ttf to use a custom font.");
+            ImGui::TextUnformatted("Font and size changes take effect after restarting GW2.");
+
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("About")) {
