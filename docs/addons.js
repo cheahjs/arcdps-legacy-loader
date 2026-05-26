@@ -28,7 +28,7 @@ window.ADDONS = {
       language: "Rust",
       migration_status: "not_migrated",
       prerelease_url: null,
-      notes: null,
+      notes: "Is now a Nexus addon, manually install with https://github.com/Zerthox/gw2-buddy/releases/latest",
     },
     {
       name: "BuildPad",
